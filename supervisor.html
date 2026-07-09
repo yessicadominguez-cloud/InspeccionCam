@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>NC Tech - Supervisor · Registro Histórico de Inspecciones</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="historial.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; font-family: 'Noto Sans', sans-serif; color: #0B3A5B; }
+  body { background: radial-gradient(circle at 15% 0%, #eef5fa 0%, #e7eef5 45%, #dde7ef 100%); background-attachment: fixed; }
+  :root {
+    --nc-dark: #0B3A5B; --nc-primary: #034A77; --nc-accent: #339FC6; --nc-light: #BFEDF6;
+    --status-ok: #10b981; --status-warning: #f59e0b; --status-critical: #ef4444;
+  }
+  .card { background: #fff; border-radius: 1.25rem; border: 1px solid #eef2f7;
+    box-shadow: 0 1px 2px rgba(11,58,91,.05), 0 16px 32px -16px rgba(11,58,91,.22); }
+  .kpi-card { background: #fff; border-radius: 1rem; border: 1px solid #eef2f7; padding: 18px;
+    box-shadow: 0 1px 2px rgba(11,58,91,.05), 0 10px 22px -14px rgba(11,58,91,.2); }
+  .badge { font-size: 10px; font-weight: 900; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; letter-spacing: .04em; display: inline-block; }
+  table.hist th { position: sticky; top: 0; background: #f8fafc; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .04em;
+    color: #64748b; text-align: left; padding: 10px 12px; border-bottom: 2px solid #e2e8f0; }
+  table.hist td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; font-size: 12.5px; vertical-align: middle; }
+  table.hist tbody tr { cursor: pointer; transition: background .1s ease; }
+  table.hist tbody tr:hover { background: #f8fbfd; }
+  .thumb-sm { width: 46px; height: 34px; object-fit: cover; border-radius: 6px; border: 2px solid #e2e8f0; }
+  .thumb-sm.nok { border-color: var(--status-critical); }
+  .thumb-sm.ok { border-color: var(--status-ok); }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(11,58,91,.7); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .modal-card { background: #fff; border-radius: 1.25rem; width: 46rem; max-width: 94vw; max-height: 88vh; overflow: auto; box-shadow: 0 20px 40px rgba(0,0,0,.3); }
+  .gal-thumb { border-radius: 0.6rem; overflow: hidden; border: 2px solid #e2e8f0; }
+  .gal-thumb.ok { border-color: var(--status-ok); }
+  .gal-thumb.nok { border-color: var(--status-critical); }
+  select, input[type=text], input[type=date] { font-family: inherit; }
+</style>
+</head>
+<body>
+
+<header class="flex items-center justify-between gap-3 px-4 h-12 bg-[#0B3A5B] border-b border-slate-700 flex-shrink-0" style="box-shadow:0 2px 12px rgba(11,58,91,.25)">
+  <img alt="NC Tech Logo" src="logo-nctech-header-white.png" class="h-7 w-auto object-contain flex-shrink-0"/>
+  <div class="flex-1 min-w-0 flex items-center justify-center gap-3 overflow-hidden whitespace-nowrap">
+    <span class="truncate" style="color:#BFEDF6;font-weight:700;font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase">Supervisor</span>
+    <div style="width:1px;height:22px;background:rgba(255,255,255,0.25)" class="shrink-0"></div>
+    <span class="truncate" style="color:#fff;font-weight:900;font-size:0.85rem;letter-spacing:0.2em;text-transform:uppercase">Registro Histórico de Inspecciones</span>
+  </div>
+  <a href="index.html" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-white text-[10px] font-bold uppercase tracking-wider border border-white/20 hover:bg-white/10 transition flex-shrink-0">
+    <span class="material-symbols-outlined text-sm">photo_camera</span>Inspector
+  </a>
+</header>
+
+<main class="p-4 max-w-6xl mx-auto" style="min-height:calc(100vh - 3rem)">
+
+  <!-- KPIs -->
+  <div class="grid gap-3 mb-4" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
+    <div class="kpi-card">
+      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Inspecciones hoy</p>
+      <p id="kpi-total" class="text-2xl font-black" style="color:var(--nc-dark)">0</p>
+    </div>
+    <div class="kpi-card">
+      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Rechazos hoy</p>
+      <p id="kpi-rechazos" class="text-2xl font-black" style="color:var(--status-critical)">0</p>
+    </div>
+    <div class="kpi-card">
+      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Tasa de aprobación</p>
+      <p id="kpi-tasa" class="text-2xl font-black" style="color:var(--status-ok)">—</p>
+    </div>
+    <div class="kpi-card">
+      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Defecto más frecuente</p>
+      <p id="kpi-defecto" class="text-sm font-black leading-snug" style="color:var(--nc-dark)">—</p>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="card p-4 mb-4">
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Periodo</label>
+        <select id="f-periodo" onchange="aplicarFiltros()" class="border-2 border-slate-200 rounded-lg px-2.5 py-2 text-xs font-semibold bg-white outline-none focus:border-[#339FC6]">
+          <option value="hoy">Hoy</option>
+          <option value="semana">Últimos 7 días</option>
+          <option value="todo">Todo</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Resultado</label>
+        <select id="f-resultado" onchange="aplicarFiltros()" class="border-2 border-slate-200 rounded-lg px-2.5 py-2 text-xs font-semibold bg-white outline-none focus:border-[#339FC6]">
+          <option value="todos">Todos</option>
+          <option value="aprobado">Aprobado</option>
+          <option value="rechazado">Rechazado</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Ruta</label>
+        <select id="f-ruta" onchange="aplicarFiltros()" class="border-2 border-slate-200 rounded-lg px-2.5 py-2 text-xs font-semibold bg-white outline-none focus:border-[#339FC6]">
+          <option value="todas">Todas</option>
+          <option>Apariencia de Perilla</option>
+          <option>Verificación de Etiqueta</option>
+          <option>Apariencia de Back Over</option>
+          <option>Clips, Brackets y Felpas</option>
+          <option>Golpes y Rayones en Pantalla</option>
+        </select>
+      </div>
+      <div class="flex-1 min-w-[160px]">
+        <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Buscar (ID u operador)</label>
+        <input id="f-buscar" type="text" oninput="aplicarFiltros()" placeholder="Ej. INS-XXXX o Operador A"
+          class="w-full border-2 border-slate-200 rounded-lg px-2.5 py-2 text-xs font-semibold outline-none focus:border-[#339FC6]"/>
+      </div>
+      <button onclick="exportarCSV()" class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-white text-[10px] font-bold uppercase tracking-wider"
+        style="background:var(--nc-dark)">
+        <span class="material-symbols-outlined text-sm">download</span>Exportar CSV
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="card overflow-hidden">
+    <div style="max-height:56vh;overflow:auto">
+      <table class="hist w-full">
+        <thead>
+          <tr>
+            <th>Imagen</th><th>ID</th><th>Fecha / Hora</th><th>Operador</th><th>Resultado</th><th>Ruta fallida</th><th>Defecto</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-historial"></tbody>
+      </table>
+    </div>
+    <p id="tabla-vacia" class="text-center text-xs text-slate-400 py-10" style="display:none">Sin inspecciones registradas todavía.</p>
+  </div>
+
+  <p class="text-[10px] text-slate-400 mt-3">
+    Solo lectura — no se puede editar, eliminar ni reclasificar ningún registro.
+    <span class="mx-1">·</span>
+    <a href="#" onclick="if(confirm('¿Borrar todo el historial de este navegador? Solo para pruebas de demo.')){ivLimpiarHistorial();aplicarFiltros();}return false;" class="underline hover:text-slate-600">Limpiar historial (demo)</a>
+  </p>
+
+</main>
+
+<!-- Modal: galería de una inspección -->
+<div id="modal-inspeccion" class="modal-overlay" style="display:none" onclick="if(event.target===this)cerrarModal()">
+  <div class="modal-card p-5">
+    <div class="flex items-center justify-between mb-3">
+      <div>
+        <h2 id="modal-id" class="text-sm font-black" style="color:var(--nc-dark)"></h2>
+        <p id="modal-meta" class="text-[11px] text-slate-400"></p>
+      </div>
+      <button onclick="cerrarModal()" class="text-slate-400 hover:text-slate-600">
+        <span class="material-symbols-outlined text-lg">close</span>
+      </button>
+    </div>
+    <div id="modal-galeria" class="grid gap-3" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr))"></div>
+  </div>
+</div>
+
+<script>
+  let registrosFiltrados = [];
+
+  function dentroDePeriodo(fechaISO, periodo) {
+    const f = new Date(fechaISO);
+    const ahora = new Date();
+    if (periodo === 'todo') return true;
+    if (periodo === 'hoy') return f.toDateString() === ahora.toDateString();
+    if (periodo === 'semana') return (ahora - f) <= 7 * 24 * 60 * 60 * 1000;
+    return true;
+  }
+
+  function aplicarFiltros() {
+    const periodo = document.getElementById('f-periodo').value;
+    const resultado = document.getElementById('f-resultado').value;
+    const ruta = document.getElementById('f-ruta').value;
+    const buscar = document.getElementById('f-buscar').value.trim().toLowerCase();
+
+    const todos = ivLeerHistorial();
+    registrosFiltrados = todos.filter(r => {
+      if (!dentroDePeriodo(r.fecha, periodo)) return false;
+      if (resultado !== 'todos' && r.resultado !== resultado) return false;
+      if (ruta !== 'todas' && r.rutaFallida !== ruta) return false;
+      if (buscar && !(r.id.toLowerCase().includes(buscar) || (r.operador || '').toLowerCase().includes(buscar))) return false;
+      return true;
+    });
+
+    renderKPIs(todos.filter(r => dentroDePeriodo(r.fecha, 'hoy')));
+    renderTabla();
+  }
+
+  function renderKPIs(registrosHoy) {
+    const total = registrosHoy.length;
+    const rechazos = registrosHoy.filter(r => r.resultado === 'rechazado').length;
+    const tasa = total ? Math.round(((total - rechazos) / total) * 100) : null;
+
+    document.getElementById('kpi-total').textContent = total;
+    document.getElementById('kpi-rechazos').textContent = rechazos;
+    document.getElementById('kpi-tasa').textContent = tasa === null ? '—' : `${tasa}%`;
+
+    const conteoDefectos = {};
+    registrosHoy.forEach(r => { if (r.rutaFallida) conteoDefectos[r.rutaFallida] = (conteoDefectos[r.rutaFallida] || 0) + 1; });
+    const top = Object.entries(conteoDefectos).sort((a, b) => b[1] - a[1])[0];
+    document.getElementById('kpi-defecto').textContent = top ? `${top[0]} (${top[1]})` : '—';
+  }
+
+  function badgeResultado(r) {
+    return r === 'aprobado'
+      ? `<span class="badge" style="background:#d1fae5;color:#065f46">Aprobado</span>`
+      : `<span class="badge" style="background:#fee2e2;color:#991b1b">Rechazado</span>`;
+  }
+
+  function renderTabla() {
+    const tbody = document.getElementById('tbody-historial');
+    document.getElementById('tabla-vacia').style.display = registrosFiltrados.length ? 'none' : 'block';
+
+    tbody.innerHTML = registrosFiltrados.map((r, i) => {
+      const miniatura = r.capturas && r.capturas.length ? r.capturas[r.capturas.length - 1] : null;
+      const fecha = new Date(r.fecha).toLocaleString('es-MX');
+      return `
+        <tr onclick="abrirModal(${i})">
+          <td>${miniatura ? `<img src="${miniatura.dataUrl}" class="thumb-sm ${miniatura.veredicto.toLowerCase()}"/>` : '—'}</td>
+          <td class="font-mono font-bold">${r.id}</td>
+          <td>${fecha}</td>
+          <td>${r.operador || '—'}</td>
+          <td>${badgeResultado(r.resultado)}</td>
+          <td>${r.rutaFallida || '—'}</td>
+          <td class="text-slate-500">${r.defecto || '—'}</td>
+        </tr>`;
+    }).join('');
+  }
+
+  function abrirModal(i) {
+    const r = registrosFiltrados[i];
+    document.getElementById('modal-id').textContent = r.id;
+    document.getElementById('modal-meta').textContent =
+      `${new Date(r.fecha).toLocaleString('es-MX')} · Operador: ${r.operador || '—'} · ${r.resultado === 'aprobado' ? 'Aprobado' : 'Rechazado — ' + r.rutaFallida}`;
+    document.getElementById('modal-galeria').innerHTML = (r.capturas || []).map(c => `
+      <div>
+        <div class="gal-thumb ${c.veredicto.toLowerCase()}"><img src="${c.dataUrl}" class="w-full h-24 object-cover"/></div>
+        <p class="text-[9px] font-black uppercase text-center text-slate-400 mt-1">${c.ruta}</p>
+      </div>`).join('');
+    document.getElementById('modal-inspeccion').style.display = 'flex';
+  }
+  function cerrarModal() { document.getElementById('modal-inspeccion').style.display = 'none'; }
+
+  function exportarCSV() {
+    const filas = [['ID', 'Fecha', 'Operador', 'Resultado', 'Ruta fallida', 'Defecto']];
+    registrosFiltrados.forEach(r => filas.push([
+      r.id, new Date(r.fecha).toLocaleString('es-MX'), r.operador || '', r.resultado, r.rutaFallida || '', r.defecto || ''
+    ]));
+    const csv = filas.map(f => f.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `historial_inspecciones_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+  }
+
+  aplicarFiltros();
+</script>
+
+</body>
+</html>

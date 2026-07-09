@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;900&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="historial.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; font-family: 'Noto Sans', sans-serif; color: #0B3A5B; }
@@ -79,7 +80,12 @@
     <div style="width:1px;height:22px;background:rgba(255,255,255,0.25)" class="shrink-0"></div>
     <span id="hd-proceso" class="truncate" style="color:#fff;font-weight:900;font-size:0.85rem;letter-spacing:0.2em;text-transform:uppercase">HONDA 25.5 SA · DISPLAY</span>
   </div>
-  <div id="hd-folio" class="text-[10px] font-bold text-white/60 uppercase tracking-wider flex-shrink-0 font-mono" style="min-width:90px;text-align:right"></div>
+  <div class="flex items-center gap-3 flex-shrink-0">
+    <div id="hd-folio" class="text-[10px] font-bold text-white/60 uppercase tracking-wider font-mono" style="min-width:90px;text-align:right"></div>
+    <a href="supervisor.html" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-white text-[10px] font-bold uppercase tracking-wider border border-white/20 hover:bg-white/10 transition">
+      <span class="material-symbols-outlined text-sm">supervisor_account</span>Supervisor
+    </a>
+  </div>
 </header>
 
 <main class="p-4" style="height:calc(100vh - 3rem); overflow:auto">
@@ -150,6 +156,16 @@
 
       <!-- Panel lateral -->
       <div class="card p-5 flex flex-col gap-5">
+        <div>
+          <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Operador</label>
+          <select id="in-operador" onchange="cambiarOperador()"
+            class="w-full border-2 border-slate-200 rounded-lg px-3 py-3 text-sm font-semibold bg-white focus:border-[#339FC6] outline-none">
+            <option>Operador A</option>
+            <option>Operador B</option>
+            <option>Operador C</option>
+          </select>
+        </div>
+
         <div>
           <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Cámara</label>
           <div class="flex items-center gap-2">
@@ -259,6 +275,13 @@
   let stream = null;
   let veredictoActual = null; // 'OK' | 'NOK' del frame recién analizado
   let dataUrlActual = null;
+
+  // ── Operador (se recuerda entre inspecciones, no requiere volver a capturarlo) ─
+  const selectOperador = document.getElementById('in-operador');
+  selectOperador.value = localStorage.getItem('iv_operador') || selectOperador.options[0].value;
+  function cambiarOperador() {
+    localStorage.setItem('iv_operador', selectOperador.value);
+  }
 
   // ── Pantalla 0 → 1: no se pide folio/ID, arranca directo la cámara ──────────
   function seleccionarProceso(tipo) {
@@ -474,7 +497,7 @@
   }
 
   function etiquetarPieza() {
-    capturas.push({ ruta: RUTAS[rutaActual].nombre, dataUrl: dataUrlActual, veredicto: 'NOK' });
+    capturas.push({ ruta: RUTAS[rutaActual].nombre, dataUrl: dataUrlActual, veredicto: 'NOK', defecto: RUTAS[rutaActual].defecto });
     detenerCamara();
     construirProgreso();
     mostrarFinal('rechazado');
@@ -482,14 +505,16 @@
 
   // ── Pantalla 3: final ───────────────────────────────────────────────────────
   function mostrarFinal(resultado) {
-    const hora = new Date().toLocaleString('es-MX');
+    const ahora = new Date();
+    const hora = ahora.toLocaleString('es-MX');
+    let fallo = null;
     if (resultado === 'aprobado') {
       document.getElementById('final-icono').textContent = 'task_alt';
       document.getElementById('final-icono').style.color = 'var(--status-ok)';
       document.getElementById('final-titulo').textContent = 'Pieza liberada';
       document.getElementById('final-detalle').textContent = `${folio} · ${RUTAS.length}/${RUTAS.length} rutas OK · ${hora} · trazabilidad guardada`;
     } else {
-      const fallo = capturas[capturas.length - 1];
+      fallo = capturas[capturas.length - 1];
       document.getElementById('final-icono').textContent = 'report';
       document.getElementById('final-icono').style.color = 'var(--status-critical)';
       document.getElementById('final-titulo').textContent = 'Pieza rechazada — requiere retrabajo';
@@ -500,6 +525,17 @@
       <div class="thumb ${c.veredicto.toLowerCase()}">
         <img src="${c.dataUrl}" class="w-full h-20 object-cover"/>
       </div>`).join('');
+
+    // Registro para el panel de Supervisor (historial.js, localStorage compartido).
+    ivGuardarInspeccion({
+      id: folio,
+      fecha: ahora.toISOString(),
+      operador: selectOperador.value,
+      resultado,
+      rutaFallida: fallo ? fallo.ruta : null,
+      defecto: fallo ? fallo.defecto : null,
+      capturas,
+    });
 
     mostrarPantalla('final');
   }
