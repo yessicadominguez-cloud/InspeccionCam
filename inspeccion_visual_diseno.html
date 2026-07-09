@@ -61,7 +61,7 @@
     <div style="width:1px;height:22px;background:rgba(255,255,255,0.25)" class="shrink-0"></div>
     <span id="hd-proceso" class="truncate" style="color:#fff;font-weight:900;font-size:0.85rem;letter-spacing:0.2em;text-transform:uppercase">HONDA 25.5 SA · DISPLAY</span>
   </div>
-  <div id="hd-folio" class="text-[10px] font-bold text-white/60 uppercase tracking-wider flex-shrink-0" style="min-width:80px;text-align:right"></div>
+  <div id="hd-folio" class="text-[10px] font-bold text-white/60 uppercase tracking-wider flex-shrink-0 font-mono" style="min-width:90px;text-align:right"></div>
 </header>
 
 <main class="p-4" style="height:calc(100vh - 3rem); overflow:auto">
@@ -88,122 +88,114 @@
     </div>
   </section>
 
-  <!-- ══════════════ PANTALLA 1: CONFIGURACIÓN ══════════════ -->
-  <section id="pantalla-setup" class="max-w-lg mx-auto mt-6" style="display:none">
-    <button onclick="mostrarPantalla('proceso')" class="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 hover:text-[#034A77] mb-3 transition">
-      <span class="material-symbols-outlined text-sm">arrow_back</span>Cambiar proceso
-    </button>
-    <div class="card p-6">
-      <h1 class="text-lg font-black" style="color:var(--nc-dark)">Nueva inspección — Proceso I.F.</h1>
-      <p class="text-[11px] text-slate-400 mt-1 mb-5">
-        Ref. FAU-F-PSG-0241 · Cámara fija, la pantalla te dice qué exponer en cada ruta.
-      </p>
+  <!-- ══════════════ PANTALLA 1: INSPECTOR (cámara + panel lateral) ══════════════ -->
+  <section id="pantalla-captura" class="max-w-6xl mx-auto mt-4" style="display:none">
 
-      <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Número de parte / Folio</label>
-      <input id="in-folio" type="text" placeholder="Ej. 3BHA / 3V0W / OP-00231"
-        class="w-full border-2 border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold focus:border-[#339FC6] focus:ring-2 focus:ring-[#339FC6]/20 outline-none transition-all mb-4"/>
-
-      <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Cámara</label>
-      <div class="flex items-center gap-2 mb-4">
-        <select id="in-camara"
-          class="flex-1 border-2 border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold focus:border-[#339FC6] focus:ring-2 focus:ring-[#339FC6]/20 outline-none transition-all bg-white">
-          <option value="">Detectando cámaras…</option>
-        </select>
-        <button onclick="detectarCamaras()" title="Actualizar lista de cámaras"
-          class="w-10 h-10 rounded-lg border-2 border-slate-200 flex items-center justify-center hover:bg-slate-50 flex-shrink-0">
-          <span class="material-symbols-outlined text-lg" style="color:var(--nc-accent)">refresh</span>
-        </button>
-      </div>
-
-      <label id="setup-rutas-titulo" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Rutas de inspección</label>
-      <ul class="rutas-list mb-5" id="setup-rutas-list"></ul>
-
-      <button onclick="iniciarInspeccion()"
-        class="btn-primary w-full py-3 rounded-lg text-white text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2">
-        <span class="material-symbols-outlined text-base">photo_camera</span>Iniciar inspección
+    <div class="flex items-center justify-between mb-3">
+      <button onclick="mostrarPantalla('proceso')" class="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 hover:text-[#034A77] transition">
+        <span class="material-symbols-outlined text-sm">arrow_back</span>Cambiar proceso
       </button>
-      <p id="setup-error" class="text-[11px] font-bold mt-3 text-center" style="color:var(--status-critical)"></p>
+      <div class="flex items-center gap-1.5">
+        <span id="cam-status-dot" class="w-2 h-2 rounded-full inline-block" style="background:#94a3b8"></span>
+        <span id="cam-status-text" class="text-[10px] font-black uppercase tracking-widest text-slate-400">Conectando…</span>
+      </div>
     </div>
-  </section>
 
-  <!-- ══════════════ PANTALLA 2: CAPTURA GUIADA ══════════════ -->
-  <section id="pantalla-captura" class="max-w-3xl mx-auto mt-4" style="display:none">
+    <div class="grid gap-4" style="grid-template-columns: 1fr 300px; align-items:start">
 
-    <!-- Progreso -->
-    <div class="flex items-center mb-5" id="cap-progreso"></div>
-
-    <div class="card p-5">
-      <!-- Instrucción -->
-      <div class="rounded-xl p-4 mb-4 flex items-start gap-3" style="background:var(--nc-light)">
-        <span class="material-symbols-outlined text-2xl" style="color:var(--nc-primary)">sync_alt</span>
-        <div>
-          <p class="text-[10px] font-black uppercase tracking-wider" style="color:var(--nc-primary)">Ruta <span id="cap-num">1</span> de <span id="cap-total">4</span> — <span id="cap-nombre-ruta"></span></p>
-          <p id="cap-instruccion" class="text-sm font-bold" style="color:var(--nc-dark)"></p>
-        </div>
-      </div>
-
-      <!-- Cámara -->
-      <div class="cam-frame mb-4">
-        <video id="cam-video" autoplay playsinline muted class="w-full h-full object-cover" style="display:none"></video>
-        <canvas id="cam-still" class="w-full h-full object-cover" style="display:none"></canvas>
-        <div id="cam-placeholder" class="absolute inset-0 flex flex-col items-center justify-center gap-2 text-slate-500">
-          <span class="material-symbols-outlined text-4xl">videocam_off</span>
-          <span class="text-xs font-bold">Solicitando acceso a la cámara…</span>
-        </div>
-        <div id="cam-analizando" class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/40" style="display:none">
-          <div class="scan-line" style="width:100%"></div>
-          <span class="material-symbols-outlined text-4xl text-white">neurology</span>
-          <span class="text-xs font-black uppercase tracking-widest text-white">Analizando con IA…</span>
-        </div>
-        <div id="cam-veredicto" class="absolute top-3 right-3" style="display:none">
-          <span id="cam-veredicto-badge" class="text-xs font-black uppercase tracking-widest px-3 py-1.5 rounded-lg shadow-lg"></span>
-        </div>
-      </div>
-      <canvas id="cam-buffer" style="display:none"></canvas>
-
-      <!-- Controles: modo vivo -->
-      <div id="cap-controles-vivo" class="flex items-center justify-center gap-4">
-        <button onclick="capturarFoto()" id="btn-capturar"
-          class="btn-accent px-6 py-3 rounded-lg text-white text-xs font-black uppercase tracking-widest flex items-center gap-2" disabled>
-          <span class="material-symbols-outlined text-base">camera</span>Capturar y analizar
-        </button>
-        <label class="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wide cursor-pointer select-none" title="Solo para la demo: fuerza que este paso salga NOK">
-          <input type="checkbox" id="chk-simular-defecto" class="rounded"/>Simular defecto (demo)
-        </label>
-      </div>
-
-      <!-- Controles: resultado OK -->
-      <div id="cap-controles-ok" class="flex justify-center" style="display:none">
-        <button onclick="siguienteRuta()"
-          class="btn-lift px-6 py-3 rounded-lg text-white text-xs font-black uppercase tracking-widest flex items-center gap-2"
-          style="background:var(--status-ok)">
-          <span class="material-symbols-outlined text-base">arrow_forward</span>Continuar
-        </button>
-      </div>
-
-      <!-- Controles: resultado NOK (bloqueo) -->
-      <div id="cap-controles-nok" style="display:none">
-        <div class="rounded-xl p-4 mb-3 flex items-start gap-3" style="background:#fef2f2;border:1px solid #fecaca">
-          <span class="material-symbols-outlined text-2xl" style="color:var(--status-critical)">report</span>
-          <div>
-            <p class="text-[10px] font-black uppercase tracking-wider" style="color:var(--status-critical)">Defecto detectado</p>
-            <p id="cap-defecto-texto" class="text-sm font-bold" style="color:var(--nc-dark)"></p>
+      <!-- Cámara (dominante) -->
+      <div class="card p-4">
+        <div class="cam-frame" style="aspect-ratio:16/11">
+          <video id="cam-video" autoplay playsinline muted class="w-full h-full object-cover" style="display:none"></video>
+          <canvas id="cam-still" class="w-full h-full object-cover" style="display:none"></canvas>
+          <div id="cam-placeholder" class="absolute inset-0 flex flex-col items-center justify-center gap-2 text-slate-500">
+            <span class="material-symbols-outlined text-4xl">videocam_off</span>
+            <span class="text-xs font-bold">Solicitando acceso a la cámara…</span>
+          </div>
+          <div id="cam-analizando" class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/40" style="display:none">
+            <div class="scan-line" style="width:100%"></div>
+            <span class="material-symbols-outlined text-4xl text-white">neurology</span>
+            <span class="text-xs font-black uppercase tracking-widest text-white">Analizando con IA…</span>
+          </div>
+          <div id="cam-veredicto" class="absolute top-3 right-3" style="display:none">
+            <span id="cam-veredicto-badge" class="text-xs font-black uppercase tracking-widest px-3 py-1.5 rounded-lg shadow-lg"></span>
           </div>
         </div>
-        <div class="flex justify-center gap-3">
-          <button onclick="repetirCaptura()"
-            class="btn-lift px-5 py-3 rounded-lg text-xs font-black uppercase tracking-widest border-2 border-slate-300 text-slate-500 hover:bg-slate-50 flex items-center gap-2">
-            <span class="material-symbols-outlined text-base">replay</span>Reintentar captura
-          </button>
-          <button onclick="etiquetarPieza()"
-            class="btn-lift px-5 py-3 rounded-lg text-white text-xs font-black uppercase tracking-widest flex items-center gap-2"
-            style="background:var(--status-critical)">
-            <span class="material-symbols-outlined text-base">label</span>Etiquetar pieza para retrabajo
-          </button>
-        </div>
+        <canvas id="cam-buffer" style="display:none"></canvas>
+        <p id="cam-error" class="text-[11px] font-bold mt-3 text-center" style="color:var(--status-critical)"></p>
       </div>
 
-      <p id="cam-error" class="text-[11px] font-bold mt-3 text-center" style="color:var(--status-critical)"></p>
+      <!-- Panel lateral -->
+      <div class="card p-4 flex flex-col gap-4">
+        <div>
+          <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Cámara</label>
+          <div class="flex items-center gap-1.5">
+            <select id="in-camara" onchange="cambiarCamara()"
+              class="flex-1 min-w-0 border border-slate-200 rounded-lg px-2 py-1.5 text-[11px] font-semibold bg-white focus:border-[#339FC6] outline-none">
+              <option value="">Detectando…</option>
+            </select>
+            <button onclick="detectarCamaras()" title="Actualizar lista de cámaras"
+              class="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-50 flex-shrink-0">
+              <span class="material-symbols-outlined text-base" style="color:var(--nc-accent)">refresh</span>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Rutas de inspección</label>
+          <ul id="sidebar-rutas" class="flex flex-col gap-1.5"></ul>
+        </div>
+
+        <div class="rounded-xl p-3 flex items-start gap-2" style="background:var(--nc-light)">
+          <span class="material-symbols-outlined text-lg mt-0.5" style="color:var(--nc-primary)">sync_alt</span>
+          <div>
+            <p class="text-[9px] font-black uppercase tracking-wider mb-0.5" style="color:var(--nc-primary)">Ruta <span id="cap-num">1</span> de <span id="cap-total">5</span> — <span id="cap-nombre-ruta"></span></p>
+            <p id="cap-instruccion" class="text-xs font-bold leading-snug" style="color:var(--nc-dark)"></p>
+          </div>
+        </div>
+
+        <!-- Controles: modo vivo -->
+        <div id="cap-controles-vivo" class="flex flex-col items-stretch gap-2">
+          <button onclick="capturarFoto()" id="btn-capturar"
+            class="btn-accent w-full py-3 rounded-lg text-white text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2" disabled>
+            <span class="material-symbols-outlined text-base">camera</span>Capturar y analizar
+          </button>
+          <label class="flex items-center justify-center gap-1.5 text-[9px] font-bold text-slate-400 uppercase tracking-wide cursor-pointer select-none" title="Solo para la demo: fuerza que este paso salga NOK">
+            <input type="checkbox" id="chk-simular-defecto" class="rounded"/>Simular defecto (demo)
+          </label>
+        </div>
+
+        <!-- Controles: resultado OK -->
+        <div id="cap-controles-ok" style="display:none">
+          <button onclick="siguienteRuta()"
+            class="btn-lift w-full py-3 rounded-lg text-white text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2"
+            style="background:var(--status-ok)">
+            <span class="material-symbols-outlined text-base">arrow_forward</span>Continuar
+          </button>
+        </div>
+
+        <!-- Controles: resultado NOK (bloqueo) -->
+        <div id="cap-controles-nok" style="display:none">
+          <div class="rounded-xl p-3 mb-2 flex items-start gap-2" style="background:#fef2f2;border:1px solid #fecaca">
+            <span class="material-symbols-outlined text-lg mt-0.5" style="color:var(--status-critical)">report</span>
+            <div>
+              <p class="text-[9px] font-black uppercase tracking-wider" style="color:var(--status-critical)">Defecto detectado</p>
+              <p id="cap-defecto-texto" class="text-xs font-bold leading-snug" style="color:var(--nc-dark)"></p>
+            </div>
+          </div>
+          <div class="flex flex-col gap-2">
+            <button onclick="etiquetarPieza()"
+              class="btn-lift w-full py-2.5 rounded-lg text-white text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2"
+              style="background:var(--status-critical)">
+              <span class="material-symbols-outlined text-base">label</span>Etiquetar para retrabajo
+            </button>
+            <button onclick="repetirCaptura()"
+              class="btn-lift w-full py-2.5 rounded-lg text-xs font-black uppercase tracking-widest border-2 border-slate-300 text-slate-500 hover:bg-slate-50 flex items-center justify-center gap-2">
+              <span class="material-symbols-outlined text-base">replay</span>Reintentar captura
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -245,24 +237,24 @@
   let veredictoActual = null; // 'OK' | 'NOK' del frame recién analizado
   let dataUrlActual = null;
 
-  document.getElementById('setup-rutas-titulo').textContent = `Rutas de inspección (${RUTAS.length})`;
-  document.getElementById('setup-rutas-list').innerHTML = RUTAS.map((r, i) => `
-    <li><span class="step-dot pendiente" style="width:20px;height:20px;font-size:10px">${i + 1}</span>${r.nombre}</li>`).join('');
+  // ── Pantalla 0 → 1: no se pide folio/ID, arranca directo la cámara ──────────
+  function seleccionarProceso(tipo) {
+    if (tipo !== 'if') return; // única opción funcional por ahora
+    iniciarInspeccion();
+  }
 
-  // ── Pantalla 1 → 2 ──────────────────────────────────────────────────────────
   async function iniciarInspeccion() {
-    folio = document.getElementById('in-folio').value.trim();
-    document.getElementById('setup-error').textContent = '';
-    if (!folio) { document.getElementById('setup-error').textContent = 'Captura el número de parte o folio.'; return; }
-
     capturas = [];
     rutaActual = 0;
+    // ID de trazabilidad autogenerado — no requiere captura manual del operador.
+    folio = 'INS-' + Date.now().toString(36).toUpperCase();
     document.getElementById('hd-folio').textContent = folio;
     document.getElementById('cap-total').textContent = RUTAS.length;
 
     mostrarPantalla('captura');
     construirProgreso();
     actualizarInstruccion();
+    repetirCaptura(); // limpia cualquier panel OK/NOK que haya quedado de una inspección previa
     await iniciarCamara();
   }
 
@@ -297,6 +289,13 @@
     }
   }
 
+  function setEstadoCamara(estado, texto) {
+    const colores = { conectando: '#94a3b8', online: 'var(--status-ok)', error: 'var(--status-critical)' };
+    document.getElementById('cam-status-dot').style.background = colores[estado];
+    document.getElementById('cam-status-text').textContent = texto;
+    document.getElementById('cam-status-text').style.color = estado === 'conectando' ? '#94a3b8' : colores[estado];
+  }
+
   async function iniciarCamara() {
     const video = document.getElementById('cam-video');
     const placeholder = document.getElementById('cam-placeholder');
@@ -304,37 +303,51 @@
     const constraints = deviceId
       ? { video: { deviceId: { exact: deviceId } }, audio: false }
       : { video: true, audio: false };
+    setEstadoCamara('conectando', 'Conectando…');
     try {
       stream = await navigator.mediaDevices.getUserMedia(constraints);
       video.srcObject = stream;
       video.style.display = 'block';
       placeholder.style.display = 'none';
       document.getElementById('btn-capturar').disabled = false;
+      setEstadoCamara('online', 'En línea');
     } catch (e) {
       placeholder.innerHTML = `
         <span class="material-symbols-outlined text-4xl" style="color:var(--status-critical)">videocam_off</span>
         <span class="text-xs font-bold text-center px-4">No se pudo acceder a la cámara seleccionada.<br>Revisa que esté conectada y los permisos del navegador.</span>
         <button onclick="iniciarCamara()" class="mt-2 px-4 py-1.5 rounded-lg text-white text-[10px] font-bold uppercase" style="background:var(--nc-accent)">Reintentar</button>`;
+      setEstadoCamara('error', 'Sin conexión');
       console.warn('[InspeccionVisual] getUserMedia falló:', e.message);
     }
+  }
+
+  async function cambiarCamara() {
+    detenerCamara();
+    document.getElementById('cam-video').style.display = 'none';
+    document.getElementById('cam-still').style.display = 'none';
+    document.getElementById('cam-placeholder').style.display = 'flex';
+    document.getElementById('btn-capturar').disabled = true;
+    await iniciarCamara();
   }
 
   function detenerCamara() {
     if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
   }
 
-  // ── Progreso (dots) ─────────────────────────────────────────────────────────
+  // ── Progreso: lista de rutas en el panel lateral ────────────────────────────
   function construirProgreso() {
-    const cont = document.getElementById('cap-progreso');
-    let html = '';
-    for (let i = 0; i < RUTAS.length; i++) {
+    const cont = document.getElementById('sidebar-rutas');
+    cont.innerHTML = RUTAS.map((r, i) => {
       const previa = capturas[i];
       const cls = previa ? (previa.veredicto === 'OK' ? 'hecho' : 'fallo') : (i === rutaActual ? 'actual' : 'pendiente');
       const icono = previa ? (previa.veredicto === 'OK' ? 'check' : 'close') : null;
-      html += `<div class="step-dot ${cls}">${icono ? `<span class="material-symbols-outlined" style="font-size:16px">${icono}</span>` : i + 1}</div>`;
-      if (i < RUTAS.length - 1) html += `<div class="step-line ${previa ? 'hecha' : ''}"></div>`;
-    }
-    cont.innerHTML = html;
+      const activa = i === rutaActual;
+      return `
+        <li class="flex items-center gap-2 text-[11px] font-bold" style="color:${activa ? 'var(--nc-dark)' : '#94a3b8'}">
+          <span class="step-dot ${cls}" style="width:22px;height:22px;font-size:10px">${icono ? `<span class="material-symbols-outlined" style="font-size:14px">${icono}</span>` : i + 1}</span>
+          ${r.nombre}
+        </li>`;
+    }).join('');
   }
 
   function actualizarInstruccion() {
@@ -451,13 +464,13 @@
       document.getElementById('final-icono').textContent = 'task_alt';
       document.getElementById('final-icono').style.color = 'var(--status-ok)';
       document.getElementById('final-titulo').textContent = 'Pieza liberada';
-      document.getElementById('final-detalle').textContent = `Folio ${folio} · ${RUTAS.length}/${RUTAS.length} rutas OK · ${hora} · trazabilidad guardada`;
+      document.getElementById('final-detalle').textContent = `${folio} · ${RUTAS.length}/${RUTAS.length} rutas OK · ${hora} · trazabilidad guardada`;
     } else {
       const fallo = capturas[capturas.length - 1];
       document.getElementById('final-icono').textContent = 'report';
       document.getElementById('final-icono').style.color = 'var(--status-critical)';
       document.getElementById('final-titulo').textContent = 'Pieza rechazada — requiere retrabajo';
-      document.getElementById('final-detalle').textContent = `Folio ${folio} · Falló en "${fallo.ruta}" · ${hora}`;
+      document.getElementById('final-detalle').textContent = `${folio} · Falló en "${fallo.ruta}" · ${hora}`;
     }
 
     document.getElementById('final-galeria').innerHTML = capturas.map(c => `
@@ -469,20 +482,12 @@
   }
 
   function reiniciar() {
-    document.getElementById('in-folio').value = '';
-    document.getElementById('hd-folio').textContent = '';
-    mostrarPantalla('setup');
-  }
-
-  // ── Pantalla 0: selección de proceso ───────────────────────────────────────
-  function seleccionarProceso(tipo) {
-    if (tipo !== 'if') return; // única opción funcional por ahora
-    mostrarPantalla('setup');
+    iniciarInspeccion();
   }
 
   // ── Utilidad ────────────────────────────────────────────────────────────────
   function mostrarPantalla(nombre) {
-    ['proceso', 'setup', 'captura', 'final'].forEach(p => {
+    ['proceso', 'captura', 'final'].forEach(p => {
       const el = document.getElementById('pantalla-' + p);
       if (p === nombre) {
         el.style.display = '';
