@@ -69,7 +69,7 @@
         </button>
       </div>
 
-      <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Rutas de inspección (5)</label>
+      <label id="setup-rutas-titulo" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Rutas de inspección</label>
       <ul class="rutas-list mb-5" id="setup-rutas-list"></ul>
 
       <button onclick="iniciarInspeccion()"
@@ -92,7 +92,7 @@
       <div class="rounded-xl p-4 mb-4 flex items-start gap-3" style="background:var(--nc-light)">
         <span class="material-symbols-outlined text-2xl" style="color:var(--nc-primary)">sync_alt</span>
         <div>
-          <p class="text-[10px] font-black uppercase tracking-wider" style="color:var(--nc-primary)">Ruta <span id="cap-num">1</span> de 5 — <span id="cap-nombre-ruta"></span></p>
+          <p class="text-[10px] font-black uppercase tracking-wider" style="color:var(--nc-primary)">Ruta <span id="cap-num">1</span> de <span id="cap-total">4</span> — <span id="cap-nombre-ruta"></span></p>
           <p id="cap-instruccion" class="text-sm font-bold" style="color:var(--nc-dark)"></p>
         </div>
       </div>
@@ -179,7 +179,7 @@
 </main>
 
 <script>
-  // ── Las 5 rutas de inspección (FAU-F-PSG-0241, Proceso I.F., HONDA 25.5 SA) ───
+  // ── Rutas de inspección (FAU-F-PSG-0241, Proceso I.F., HONDA 25.5 SA) ─────────
   const RUTAS = [
     { nombre: 'Apariencia de Perilla', instruccion: 'Gira la pieza y expón el lateral: la perilla debe quedar de frente a la cámara.',
       defecto: 'Rayón / golpe detectado en la perilla' },
@@ -201,6 +201,7 @@
   let veredictoActual = null; // 'OK' | 'NOK' del frame recién analizado
   let dataUrlActual = null;
 
+  document.getElementById('setup-rutas-titulo').textContent = `Rutas de inspección (${RUTAS.length})`;
   document.getElementById('setup-rutas-list').innerHTML = RUTAS.map((r, i) => `
     <li><span class="step-dot pendiente" style="width:20px;height:20px;font-size:10px">${i + 1}</span>${r.nombre}</li>`).join('');
 
@@ -213,6 +214,7 @@
     capturas = [];
     rutaActual = 0;
     document.getElementById('hd-folio').textContent = folio;
+    document.getElementById('cap-total').textContent = RUTAS.length;
 
     mostrarPantalla('captura');
     construirProgreso();
@@ -405,7 +407,7 @@
       document.getElementById('final-icono').textContent = 'task_alt';
       document.getElementById('final-icono').style.color = 'var(--status-ok)';
       document.getElementById('final-titulo').textContent = 'Pieza liberada';
-      document.getElementById('final-detalle').textContent = `Folio ${folio} · 5/5 rutas OK · ${hora} · trazabilidad guardada`;
+      document.getElementById('final-detalle').textContent = `Folio ${folio} · ${RUTAS.length}/${RUTAS.length} rutas OK · ${hora} · trazabilidad guardada`;
     } else {
       const fallo = capturas[capturas.length - 1];
       document.getElementById('final-icono').textContent = 'report';
