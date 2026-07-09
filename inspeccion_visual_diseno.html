@@ -56,6 +56,18 @@
       <input id="in-folio" type="text" placeholder="Ej. A7911-205-06 / OP-00231"
         class="w-full border-2 border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold focus:border-[#339FC6] focus:ring-2 focus:ring-[#339FC6]/20 outline-none transition-all mb-4"/>
 
+      <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Cámara</label>
+      <div class="flex items-center gap-2 mb-4">
+        <select id="in-camara"
+          class="flex-1 border-2 border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold focus:border-[#339FC6] focus:ring-2 focus:ring-[#339FC6]/20 outline-none transition-all bg-white">
+          <option value="">Detectando cámaras…</option>
+        </select>
+        <button onclick="detectarCamaras()" title="Actualizar lista de cámaras"
+          class="w-10 h-10 rounded-lg border-2 border-slate-200 flex items-center justify-center hover:bg-slate-50 flex-shrink-0">
+          <span class="material-symbols-outlined text-lg" style="color:var(--nc-accent)">refresh</span>
+        </button>
+      </div>
+
       <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Número de ángulos a revisar</label>
       <div class="flex items-center gap-3 mb-1">
         <button onclick="ajustarPasos(-1)" class="w-9 h-9 rounded-lg border-2 border-slate-200 font-black text-lg hover:bg-slate-50">−</button>
@@ -204,11 +216,50 @@
     await iniciarCamara();
   }
 
+  // ── Selección de cámara (externa, USB) ─────────────────────────────────────
+  // Sin esto el navegador agarra cualquier cámara por default (ej. la integrada
+  // del laptop en vez de la externa fija que realmente ve la pieza).
+  async function detectarCamaras() {
+    const select = document.getElementById('in-camara');
+    select.innerHTML = '<option value="">Detectando cámaras…</option>';
+    try {
+      // Pide permiso una vez (si no se ha otorgado) para que enumerateDevices
+      // devuelva las etiquetas (label) reales de cada cámara, no solo IDs.
+      let permStream = null;
+      const dispositivos0 = await navigator.mediaDevices.enumerateDevices();
+      const sinEtiquetas = dispositivos0.some(d => d.kind === 'videoinput' && !d.label);
+      if (sinEtiquetas) {
+        permStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      }
+
+      const dispositivos = await navigator.mediaDevices.enumerateDevices();
+      const camaras = dispositivos.filter(d => d.kind === 'videoinput');
+      if (permStream) permStream.getTracks().forEach(t => t.stop());
+
+      if (!camaras.length) {
+        select.innerHTML = '<option value="">No se detectó ninguna cámara</option>';
+        return;
+      }
+      select.innerHTML = camaras.map((c, i) => `<option value="${c.deviceId}">${c.label || 'Cámara ' + (i + 1)}</option>`).join('');
+      // Si el nombre sugiere que es una webcam integrada, evita dejarla seleccionada
+      // por default cuando hay otra opción disponible (probablemente la externa).
+      const idxNoIntegrada = camaras.findIndex(c => !/integrat|built-?in|facetime/i.test(c.label || ''));
+      if (idxNoIntegrada > 0) select.value = camaras[idxNoIntegrada].deviceId;
+    } catch (e) {
+      select.innerHTML = '<option value="">No se pudo listar cámaras (revisa permisos)</option>';
+      console.warn('[InspeccionVisual] enumerateDevices falló:', e.message);
+    }
+  }
+
   async function iniciarCamara() {
     const video = document.getElementById('cam-video');
     const placeholder = document.getElementById('cam-placeholder');
+    const deviceId = document.getElementById('in-camara').value;
+    const constraints = deviceId
+      ? { video: { deviceId: { exact: deviceId } }, audio: false }
+      : { video: true, audio: false };
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+      stream = await navigator.mediaDevices.getUserMedia(constraints);
       video.srcObject = stream;
       video.style.display = 'block';
       placeholder.style.display = 'none';
@@ -216,7 +267,7 @@
     } catch (e) {
       placeholder.innerHTML = `
         <span class="material-symbols-outlined text-4xl" style="color:var(--status-critical)">videocam_off</span>
-        <span class="text-xs font-bold text-center px-4">No se pudo acceder a la cámara.<br>Revisa los permisos del navegador e intenta de nuevo.</span>
+        <span class="text-xs font-bold text-center px-4">No se pudo acceder a la cámara seleccionada.<br>Revisa que esté conectada y los permisos del navegador.</span>
         <button onclick="iniciarCamara()" class="mt-2 px-4 py-1.5 rounded-lg text-white text-[10px] font-bold uppercase" style="background:var(--nc-accent)">Reintentar</button>`;
       console.warn('[InspeccionVisual] getUserMedia falló:', e.message);
     }
@@ -372,6 +423,7 @@
   }
 
   ajustarPasos(0);
+  detectarCamaras();
 </script>
 
 </body>
