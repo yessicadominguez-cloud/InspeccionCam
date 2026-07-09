@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>NC Tech - Inspección Visual (Revisión de Diseño)</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; font-family: 'Noto Sans', sans-serif; background: #F0F4F8; color: #0B3A5B; }
+  :root {
+    --nc-dark: #0B3A5B; --nc-primary: #034A77; --nc-accent: #339FC6; --nc-light: #BFEDF6;
+    --status-ok: #10b981; --status-warning: #f59e0b; --status-critical: #ef4444;
+  }
+  .step-dot { width: 28px; height: 28px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 12px; flex-shrink: 0; }
+  .step-dot.pendiente { background: #e2e8f0; color: #94a3b8; }
+  .step-dot.actual    { background: var(--nc-accent); color: #fff; box-shadow: 0 0 0 4px rgba(51,159,198,.25); }
+  .step-dot.hecho     { background: var(--status-ok); color: #fff; }
+  .step-line { flex: 1; height: 2px; background: #e2e8f0; }
+  .step-line.hecha { background: var(--status-ok); }
+  .cam-frame { background: #0f172a; border-radius: 0.75rem; overflow: hidden; position: relative; aspect-ratio: 4/3; }
+  .thumb { border-radius: 0.6rem; overflow: hidden; border: 2px solid #e2e8f0; cursor: pointer; transition: border-color .15s ease, transform .1s ease; }
+  .thumb:hover { transform: scale(1.02); }
+  .thumb.ok       { border-color: var(--status-ok); }
+  .thumb.revisar  { border-color: var(--status-warning); }
+  .chip { font-size: 9px; font-weight: 900; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; letter-spacing: .04em; cursor: pointer; transition: opacity .15s ease; }
+  .chip.inactivo { opacity: .35; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(11,58,91,.7); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 24px; }
+</style>
+</head>
+<body>
+
+<header class="flex items-center justify-between gap-3 px-4 h-12 bg-[#0B3A5B] border-b border-slate-700 shadow-sm flex-shrink-0">
+  <img alt="NC Tech Logo" src="logo-nctech-header-white.png" class="h-7 w-auto object-contain flex-shrink-0"/>
+  <div class="flex-1 min-w-0 flex items-center justify-center gap-3 overflow-hidden whitespace-nowrap">
+    <span class="truncate" style="color:#BFEDF6;font-weight:700;font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase">Inspección Visual</span>
+    <div style="width:1px;height:22px;background:rgba(255,255,255,0.25)" class="shrink-0"></div>
+    <span class="truncate" style="color:#fff;font-weight:900;font-size:0.85rem;letter-spacing:0.2em;text-transform:uppercase">Revisión de Diseño</span>
+  </div>
+  <div id="hd-folio" class="text-[10px] font-bold text-white/60 uppercase tracking-wider flex-shrink-0" style="min-width:80px;text-align:right"></div>
+</header>
+
+<main class="p-4" style="height:calc(100vh - 3rem); overflow:auto">
+
+  <!-- ══════════════ PANTALLA 1: CONFIGURACIÓN ══════════════ -->
+  <section id="pantalla-setup" class="max-w-lg mx-auto mt-6">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+      <h1 class="text-lg font-black" style="color:var(--nc-dark)">Nueva inspección visual</h1>
+      <p class="text-[11px] text-slate-400 mt-1 mb-5">
+        Cámara fija — el sistema te va a decir cuándo y cuánto girar la pieza para cubrir todos los ángulos.
+      </p>
+
+      <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Número de parte / Folio</label>
+      <input id="in-folio" type="text" placeholder="Ej. A7911-205-06 / OP-00231"
+        class="w-full border-2 border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold focus:border-[#339FC6] focus:ring-2 focus:ring-[#339FC6]/20 outline-none transition-all mb-4"/>
+
+      <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Número de ángulos a revisar</label>
+      <div class="flex items-center gap-3 mb-1">
+        <button onclick="ajustarPasos(-1)" class="w-9 h-9 rounded-lg border-2 border-slate-200 font-black text-lg hover:bg-slate-50">−</button>
+        <div id="in-pasos-display" class="flex-1 text-center text-2xl font-black" style="color:var(--nc-dark)">3</div>
+        <button onclick="ajustarPasos(1)" class="w-9 h-9 rounded-lg border-2 border-slate-200 font-black text-lg hover:bg-slate-50">+</button>
+      </div>
+      <p id="in-pasos-hint" class="text-[10px] text-slate-400 mb-5">Girarás la pieza ~120° entre cada ángulo.</p>
+
+      <button onclick="iniciarInspeccion()"
+        class="w-full py-3 rounded-lg text-white text-xs font-black uppercase tracking-widest transition flex items-center justify-center gap-2"
+        style="background:var(--nc-dark)" onmouseover="this.style.background='var(--nc-primary)'" onmouseout="this.style.background='var(--nc-dark)'">
+        <span class="material-symbols-outlined text-base">photo_camera</span>Iniciar inspección
+      </button>
+      <p id="setup-error" class="text-[11px] font-bold mt-3 text-center" style="color:var(--status-critical)"></p>
+    </div>
+  </section>
+
+  <!-- ══════════════ PANTALLA 2: CAPTURA GUIADA ══════════════ -->
+  <section id="pantalla-captura" class="max-w-3xl mx-auto mt-4" style="display:none">
+
+    <!-- Progreso -->
+    <div class="flex items-center mb-5" id="cap-progreso"></div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+      <!-- Instrucción -->
+      <div class="rounded-xl p-4 mb-4 flex items-start gap-3" style="background:var(--nc-light)">
+        <span class="material-symbols-outlined text-2xl" style="color:var(--nc-primary)">sync_alt</span>
+        <div>
+          <p class="text-[10px] font-black uppercase tracking-wider" style="color:var(--nc-primary)">Paso <span id="cap-num">1</span> de <span id="cap-total">3</span></p>
+          <p id="cap-instruccion" class="text-sm font-bold" style="color:var(--nc-dark)">Coloca la pieza en la posición inicial (frontal) y no la muevas.</p>
+        </div>
+      </div>
+
+      <!-- Cámara -->
+      <div class="cam-frame mb-4">
+        <video id="cam-video" autoplay playsinline muted class="w-full h-full object-cover" style="display:none"></video>
+        <canvas id="cam-still" class="w-full h-full object-cover" style="display:none"></canvas>
+        <div id="cam-placeholder" class="absolute inset-0 flex flex-col items-center justify-center gap-2 text-slate-500">
+          <span class="material-symbols-outlined text-4xl">videocam_off</span>
+          <span class="text-xs font-bold">Solicitando acceso a la cámara…</span>
+        </div>
+      </div>
+      <canvas id="cam-buffer" style="display:none"></canvas>
+
+      <!-- Controles: modo vivo -->
+      <div id="cap-controles-vivo" class="flex justify-center">
+        <button onclick="capturarFoto()" id="btn-capturar"
+          class="px-6 py-3 rounded-lg text-white text-xs font-black uppercase tracking-widest transition flex items-center gap-2"
+          style="background:var(--nc-accent)" onmouseover="this.style.background='var(--nc-primary)'" onmouseout="this.style.background='var(--nc-accent)'" disabled>
+          <span class="material-symbols-outlined text-base">camera</span>Capturar
+        </button>
+      </div>
+
+      <!-- Controles: revisar captura -->
+      <div id="cap-controles-revisar" class="flex justify-center gap-3" style="display:none">
+        <button onclick="repetirCaptura()"
+          class="px-5 py-3 rounded-lg text-xs font-black uppercase tracking-widest border-2 border-slate-300 text-slate-500 hover:bg-slate-50 flex items-center gap-2">
+          <span class="material-symbols-outlined text-base">replay</span>Repetir
+        </button>
+        <button onclick="confirmarCaptura()"
+          class="px-5 py-3 rounded-lg text-white text-xs font-black uppercase tracking-widest transition flex items-center gap-2"
+          style="background:var(--status-ok)">
+          <span class="material-symbols-outlined text-base">check</span>Confirmar y continuar
+        </button>
+      </div>
+
+      <p id="cam-error" class="text-[11px] font-bold mt-3 text-center" style="color:var(--status-critical)"></p>
+    </div>
+  </section>
+
+  <!-- ══════════════ PANTALLA 3: RESUMEN / DECISIÓN ══════════════ -->
+  <section id="pantalla-resumen" class="max-w-4xl mx-auto mt-4" style="display:none">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-4">
+      <h2 class="text-base font-black mb-0.5" style="color:var(--nc-dark)">Revisión de capturas</h2>
+      <p class="text-[11px] text-slate-400 mb-4">Marca cada ángulo como OK o Revisar. Click en una imagen para verla en grande.</p>
+      <div id="resumen-grid" class="grid gap-3" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr))"></div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+      <h3 class="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2">Decisión final</h3>
+      <div class="flex gap-2 mb-4" id="decision-botones">
+        <button onclick="setDecision('aprobado')" data-dec="aprobado" class="dec-btn flex-1 py-2.5 rounded-lg text-xs font-black uppercase tracking-wide border-2 transition">Aprobado</button>
+        <button onclick="setDecision('observaciones')" data-dec="observaciones" class="dec-btn flex-1 py-2.5 rounded-lg text-xs font-black uppercase tracking-wide border-2 transition">Con observaciones</button>
+        <button onclick="setDecision('rechazado')" data-dec="rechazado" class="dec-btn flex-1 py-2.5 rounded-lg text-xs font-black uppercase tracking-wide border-2 transition">Rechazado</button>
+      </div>
+      <textarea id="in-notas" rows="2" placeholder="Notas / observaciones (opcional)"
+        class="w-full border-2 border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:border-[#339FC6] focus:ring-2 focus:ring-[#339FC6]/20 outline-none transition-all mb-4"></textarea>
+      <button onclick="finalizarInspeccion()"
+        class="w-full py-3 rounded-lg text-white text-xs font-black uppercase tracking-widest transition"
+        style="background:var(--nc-dark)" onmouseover="this.style.background='var(--nc-primary)'" onmouseout="this.style.background='var(--nc-dark)'">
+        Finalizar inspección
+      </button>
+    </div>
+  </section>
+
+  <!-- ══════════════ PANTALLA 4: CONFIRMACIÓN ══════════════ -->
+  <section id="pantalla-final" class="max-w-lg mx-auto mt-16 text-center" style="display:none">
+    <span id="final-icono" class="material-symbols-outlined text-6xl mb-3" style="color:var(--status-ok)">task_alt</span>
+    <h1 id="final-titulo" class="text-xl font-black mb-1" style="color:var(--nc-dark)">Inspección registrada</h1>
+    <p id="final-detalle" class="text-xs text-slate-400 mb-6"></p>
+    <button onclick="reiniciar()"
+      class="px-6 py-3 rounded-lg text-white text-xs font-black uppercase tracking-widest transition"
+      style="background:var(--nc-dark)" onmouseover="this.style.background='var(--nc-primary)'" onmouseout="this.style.background='var(--nc-dark)'">
+      Nueva inspección
+    </button>
+  </section>
+
+</main>
+
+<!-- Modal: ver captura en grande -->
+<div id="modal-zoom" class="modal-overlay" style="display:none" onclick="cerrarZoom()">
+  <img id="modal-zoom-img" style="max-width:90vw;max-height:88vh;border-radius:0.75rem" />
+</div>
+
+<script>
+  // ── Estado ──────────────────────────────────────────────────────────────────
+  let numPasos = 3;
+  let pasoActual = 0;         // índice 0-based del paso en curso durante la captura
+  let capturas = [];          // [{ dataUrl, estado: 'ok'|'revisar' }]
+  let folio = '';
+  let stream = null;
+  let frameListo = false;
+  let decision = null;
+
+  function ajustarPasos(delta) {
+    numPasos = Math.min(12, Math.max(2, numPasos + delta));
+    document.getElementById('in-pasos-display').textContent = numPasos;
+    const grados = Math.round(360 / numPasos);
+    document.getElementById('in-pasos-hint').textContent = `Girarás la pieza ~${grados}° entre cada ángulo.`;
+  }
+
+  // ── Pantalla 1 → 2 ──────────────────────────────────────────────────────────
+  async function iniciarInspeccion() {
+    folio = document.getElementById('in-folio').value.trim();
+    document.getElementById('setup-error').textContent = '';
+    if (!folio) { document.getElementById('setup-error').textContent = 'Captura el número de parte o folio.'; return; }
+
+    capturas = [];
+    pasoActual = 0;
+    document.getElementById('hd-folio').textContent = folio;
+    document.getElementById('cap-total').textContent = numPasos;
+
+    mostrarPantalla('captura');
+    construirProgreso();
+    actualizarInstruccion();
+    await iniciarCamara();
+  }
+
+  async function iniciarCamara() {
+    const video = document.getElementById('cam-video');
+    const placeholder = document.getElementById('cam-placeholder');
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+      video.srcObject = stream;
+      video.style.display = 'block';
+      placeholder.style.display = 'none';
+      document.getElementById('btn-capturar').disabled = false;
+    } catch (e) {
+      placeholder.innerHTML = `
+        <span class="material-symbols-outlined text-4xl" style="color:var(--status-critical)">videocam_off</span>
+        <span class="text-xs font-bold text-center px-4">No se pudo acceder a la cámara.<br>Revisa los permisos del navegador e intenta de nuevo.</span>
+        <button onclick="iniciarCamara()" class="mt-2 px-4 py-1.5 rounded-lg text-white text-[10px] font-bold uppercase" style="background:var(--nc-accent)">Reintentar</button>`;
+      console.warn('[InspeccionVisual] getUserMedia falló:', e.message);
+    }
+  }
+
+  function detenerCamara() {
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  }
+
+  // ── Progreso (dots) ─────────────────────────────────────────────────────────
+  function construirProgreso() {
+    const cont = document.getElementById('cap-progreso');
+    let html = '';
+    for (let i = 0; i < numPasos; i++) {
+      const cls = i < pasoActual ? 'hecho' : (i === pasoActual ? 'actual' : 'pendiente');
+      html += `<div class="step-dot ${cls}">${i < pasoActual ? '<span class="material-symbols-outlined" style="font-size:16px">check</span>' : i + 1}</div>`;
+      if (i < numPasos - 1) html += `<div class="step-line ${i < pasoActual ? 'hecha' : ''}"></div>`;
+    }
+    cont.innerHTML = html;
+  }
+
+  function actualizarInstruccion() {
+    document.getElementById('cap-num').textContent = pasoActual + 1;
+    const grados = Math.round(360 / numPasos);
+    const texto = pasoActual === 0
+      ? 'Coloca la pieza en la posición inicial (frontal) y no la muevas.'
+      : `Gira la pieza ~${grados}° respecto a la posición anterior y detente.`;
+    document.getElementById('cap-instruccion').textContent = texto;
+  }
+
+  // ── Captura ─────────────────────────────────────────────────────────────────
+  function capturarFoto() {
+    const video = document.getElementById('cam-video');
+    const buffer = document.getElementById('cam-buffer');
+    buffer.width = video.videoWidth;
+    buffer.height = video.videoHeight;
+    buffer.getContext('2d').drawImage(video, 0, 0, buffer.width, buffer.height);
+    const dataUrl = buffer.toDataURL('image/jpeg', 0.92);
+
+    const still = document.getElementById('cam-still');
+    still.width = buffer.width;
+    still.height = buffer.height;
+    still.getContext('2d').drawImage(buffer, 0, 0);
+
+    video.style.display = 'none';
+    still.style.display = 'block';
+    frameListo = dataUrl;
+
+    document.getElementById('cap-controles-vivo').style.display = 'none';
+    document.getElementById('cap-controles-revisar').style.display = 'flex';
+  }
+
+  function repetirCaptura() {
+    document.getElementById('cam-still').style.display = 'none';
+    document.getElementById('cam-video').style.display = 'block';
+    document.getElementById('cap-controles-vivo').style.display = 'flex';
+    document.getElementById('cap-controles-revisar').style.display = 'none';
+    frameListo = false;
+  }
+
+  function confirmarCaptura() {
+    capturas.push({ dataUrl: frameListo, estado: null });
+    frameListo = false;
+    pasoActual++;
+
+    if (pasoActual >= numPasos) {
+      detenerCamara();
+      mostrarResumen();
+      return;
+    }
+
+    document.getElementById('cam-still').style.display = 'none';
+    document.getElementById('cam-video').style.display = 'block';
+    document.getElementById('cap-controles-vivo').style.display = 'flex';
+    document.getElementById('cap-controles-revisar').style.display = 'none';
+    construirProgreso();
+    actualizarInstruccion();
+  }
+
+  // ── Pantalla 3: resumen ─────────────────────────────────────────────────────
+  function mostrarResumen() {
+    mostrarPantalla('resumen');
+    decision = null;
+    document.getElementById('in-notas').value = '';
+    actualizarBotonesDecision();
+    renderResumenGrid();
+  }
+
+  function renderResumenGrid() {
+    const grid = document.getElementById('resumen-grid');
+    grid.innerHTML = capturas.map((c, i) => `
+      <div class="flex flex-col gap-1.5">
+        <div class="thumb ${c.estado ?? ''}" onclick="abrirZoom(${i})">
+          <img src="${c.dataUrl}" class="w-full h-24 object-cover"/>
+        </div>
+        <p class="text-[9px] font-black uppercase text-center text-slate-400">Ángulo ${i + 1}</p>
+        <div class="flex justify-center gap-1.5">
+          <span class="chip ${c.estado === 'ok' ? '' : 'inactivo'}" style="background:var(--status-ok);color:#fff" onclick="marcarEstado(${i},'ok')">OK</span>
+          <span class="chip ${c.estado === 'revisar' ? '' : 'inactivo'}" style="background:var(--status-warning);color:#fff" onclick="marcarEstado(${i},'revisar')">Revisar</span>
+        </div>
+      </div>`).join('');
+  }
+
+  function marcarEstado(i, estado) {
+    capturas[i].estado = capturas[i].estado === estado ? null : estado;
+    renderResumenGrid();
+  }
+
+  function abrirZoom(i) {
+    document.getElementById('modal-zoom-img').src = capturas[i].dataUrl;
+    document.getElementById('modal-zoom').style.display = 'flex';
+  }
+  function cerrarZoom() { document.getElementById('modal-zoom').style.display = 'none'; }
+
+  function setDecision(d) { decision = d; actualizarBotonesDecision(); }
+  function actualizarBotonesDecision() {
+    const colores = { aprobado: 'var(--status-ok)', observaciones: 'var(--status-warning)', rechazado: 'var(--status-critical)' };
+    document.querySelectorAll('.dec-btn').forEach(btn => {
+      const d = btn.dataset.dec;
+      const activo = decision === d;
+      btn.style.borderColor = activo ? colores[d] : '#e2e8f0';
+      btn.style.background = activo ? colores[d] : '#fff';
+      btn.style.color = activo ? '#fff' : '#64748b';
+    });
+  }
+
+  // ── Pantalla 4: final ───────────────────────────────────────────────────────
+  function finalizarInspeccion() {
+    if (!decision) { alert('Selecciona una decisión final (Aprobado / Con observaciones / Rechazado).'); return; }
+    const iconos = { aprobado: ['task_alt', 'var(--status-ok)'], observaciones: ['warning', 'var(--status-warning)'], rechazado: ['cancel', 'var(--status-critical)'] };
+    const titulos = { aprobado: 'Inspección aprobada', observaciones: 'Aprobado con observaciones', rechazado: 'Inspección rechazada' };
+    const [icono, color] = iconos[decision];
+
+    document.getElementById('final-icono').textContent = icono;
+    document.getElementById('final-icono').style.color = color;
+    document.getElementById('final-titulo').textContent = titulos[decision];
+    const hora = new Date().toLocaleString('es-MX');
+    document.getElementById('final-detalle').textContent = `Folio ${folio} · ${capturas.length} ángulos capturados · ${hora}`;
+    mostrarPantalla('final');
+  }
+
+  function reiniciar() {
+    document.getElementById('in-folio').value = '';
+    document.getElementById('hd-folio').textContent = '';
+    mostrarPantalla('setup');
+  }
+
+  // ── Utilidad ────────────────────────────────────────────────────────────────
+  function mostrarPantalla(nombre) {
+    ['setup', 'captura', 'resumen', 'final'].forEach(p => {
+      document.getElementById('pantalla-' + p).style.display = (p === nombre) ? '' : 'none';
+    });
+  }
+
+  ajustarPasos(0);
+</script>
+
+</body>
+</html>
