@@ -85,7 +85,7 @@
 <main class="p-4" style="height:calc(100vh - 3rem); overflow:auto">
 
   <!-- ══════════════ PANTALLA 0: SELECCIÓN DE PROCESO ══════════════ -->
-  <section id="pantalla-proceso" class="max-w-2xl mx-auto mt-10">
+  <section id="pantalla-proceso" class="max-w-2xl mx-auto mt-10" style="display:none">
     <div class="text-center mb-6">
       <h1 class="text-2xl font-black" style="color:var(--nc-dark)">¿Qué proceso quieres correr?</h1>
       <p class="text-[12px] text-slate-400 mt-1">Selecciona el tipo de inspección para continuar.</p>
@@ -523,8 +523,13 @@
     });
   }
 
-  mostrarPantalla('proceso');
-  detectarCamaras();
+  // Arranca directo en la cámara — sin pantalla de selección de proceso intermedia.
+  // detectarCamaras() debe terminar antes de abrir el stream real (si se traslapan,
+  // el getUserMedia de la cámara real se queda colgado esperando el temporal).
+  (async () => {
+    await detectarCamaras();
+    seleccionarProceso('if');
+  })();
 </script>
 
 </body>
