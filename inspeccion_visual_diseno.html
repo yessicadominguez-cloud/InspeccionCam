@@ -17,7 +17,7 @@
   }
   .card { background: #fff; border-radius: 1.25rem; border: 1px solid #eef2f7;
     box-shadow: 0 1px 2px rgba(11,58,91,.05), 0 16px 32px -16px rgba(11,58,91,.22); }
-  .step-dot { width: 30px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 12px; flex-shrink: 0; transition: all .2s ease; }
+  .step-dot { width: 34px; height: 34px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; flex-shrink: 0; transition: all .2s ease; }
   .step-dot.pendiente { background: #e7edf3; color: #a3b1c2; }
   .step-dot.actual    { background: var(--nc-accent); color: #fff; box-shadow: 0 0 0 5px rgba(51,159,198,.2); }
   .step-dot.hecho     { background: var(--status-ok); color: #fff; }
@@ -93,15 +93,15 @@
     <div class="grid gap-4" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr))">
       <div class="proc-card" onclick="seleccionarProceso('if')">
         <div class="proc-icon mb-3"><span class="material-symbols-outlined">verified</span></div>
-        <p class="text-[9px] font-black uppercase tracking-widest mb-1" style="color:var(--nc-accent)">FAU-F-PSG-0241</p>
-        <h2 class="text-sm font-black mb-1" style="color:var(--nc-dark)">Inspección Final (I.F.)</h2>
-        <p class="text-[11px] text-slate-400 leading-snug">HONDA 25.5 SA · DISPLAY — 5 rutas de inspección visual asistida por IA.</p>
+        <p class="text-xs font-black uppercase tracking-widest mb-1.5" style="color:var(--nc-accent)">FAU-F-PSG-0241</p>
+        <h2 class="text-lg font-black mb-1.5" style="color:var(--nc-dark)">Inspección Final (I.F.)</h2>
+        <p class="text-sm text-slate-400 leading-snug">HONDA 25.5 SA · DISPLAY — 5 rutas de inspección visual asistida por IA.</p>
       </div>
       <div class="proc-card disabled">
         <div class="proc-icon mb-3" style="background:#eef2f7;color:#94a3b8"><span class="material-symbols-outlined">add_circle</span></div>
-        <p class="text-[9px] font-black uppercase tracking-widest mb-1 text-slate-400">POR DEFINIR</p>
-        <h2 class="text-sm font-black mb-1 text-slate-400">Agregar proceso</h2>
-        <p class="text-[11px] text-slate-400 leading-snug">Próximamente — otros procesos/estaciones se agregan aquí.</p>
+        <p class="text-xs font-black uppercase tracking-widest mb-1.5 text-slate-400">POR DEFINIR</p>
+        <h2 class="text-lg font-black mb-1.5 text-slate-400">Agregar proceso</h2>
+        <p class="text-sm text-slate-400 leading-snug">Próximamente — otros procesos/estaciones se agregan aquí.</p>
       </div>
     </div>
   </section>
@@ -110,16 +110,16 @@
   <section id="pantalla-captura" class="max-w-6xl mx-auto mt-4" style="display:none">
 
     <div class="flex items-center justify-between mb-3">
-      <button onclick="mostrarPantalla('proceso')" class="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 hover:text-[#034A77] transition">
-        <span class="material-symbols-outlined text-sm">arrow_back</span>Cambiar proceso
+      <button onclick="mostrarPantalla('proceso')" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-[#034A77] transition py-2">
+        <span class="material-symbols-outlined">arrow_back</span>Cambiar proceso
       </button>
-      <div class="flex items-center gap-1.5">
-        <span id="cam-status-dot" class="w-2 h-2 rounded-full inline-block" style="background:#94a3b8"></span>
-        <span id="cam-status-text" class="text-[10px] font-black uppercase tracking-widest text-slate-400">Conectando…</span>
+      <div class="flex items-center gap-2">
+        <span id="cam-status-dot" class="w-2.5 h-2.5 rounded-full inline-block" style="background:#94a3b8"></span>
+        <span id="cam-status-text" class="text-xs font-black uppercase tracking-widest text-slate-400">Conectando…</span>
       </div>
     </div>
 
-    <div class="grid gap-4" style="grid-template-columns: 1fr 300px; align-items:start">
+    <div class="grid gap-4" style="grid-template-columns: 1fr 400px; align-items:start">
 
       <!-- Cámara (dominante) -->
       <div class="card p-4">
@@ -141,7 +141,7 @@
             <span class="text-xs font-black uppercase tracking-widest text-white" style="filter:drop-shadow(0 2px 6px rgba(0,0,0,.6))">Analizando con IA…</span>
           </div>
           <div id="cam-veredicto" class="absolute top-3 right-3" style="display:none">
-            <span id="cam-veredicto-badge" class="text-xs font-black uppercase tracking-widest px-3 py-1.5 rounded-lg shadow-lg"></span>
+            <span id="cam-veredicto-badge" class="text-sm font-black uppercase tracking-widest px-4 py-2 rounded-lg shadow-lg"></span>
           </div>
         </div>
         <canvas id="cam-buffer" style="display:none"></canvas>
@@ -149,72 +149,72 @@
       </div>
 
       <!-- Panel lateral -->
-      <div class="card p-4 flex flex-col gap-4">
+      <div class="card p-5 flex flex-col gap-5">
         <div>
-          <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Cámara</label>
-          <div class="flex items-center gap-1.5">
+          <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Cámara</label>
+          <div class="flex items-center gap-2">
             <select id="in-camara" onchange="cambiarCamara()"
-              class="flex-1 min-w-0 border border-slate-200 rounded-lg px-2 py-1.5 text-[11px] font-semibold bg-white focus:border-[#339FC6] outline-none">
+              class="flex-1 min-w-0 border-2 border-slate-200 rounded-lg px-3 py-3 text-sm font-semibold bg-white focus:border-[#339FC6] outline-none">
               <option value="">Detectando…</option>
             </select>
             <button onclick="detectarCamaras()" title="Actualizar lista de cámaras"
-              class="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-50 flex-shrink-0">
-              <span class="material-symbols-outlined text-base" style="color:var(--nc-accent)">refresh</span>
+              class="w-12 h-12 rounded-lg border-2 border-slate-200 flex items-center justify-center hover:bg-slate-50 flex-shrink-0">
+              <span class="material-symbols-outlined text-xl" style="color:var(--nc-accent)">refresh</span>
             </button>
           </div>
         </div>
 
         <div>
-          <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Rutas de inspección</label>
-          <ul id="sidebar-rutas" class="flex flex-col gap-1.5"></ul>
+          <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Rutas de inspección</label>
+          <ul id="sidebar-rutas" class="flex flex-col gap-2.5"></ul>
         </div>
 
-        <div class="rounded-xl p-3 flex items-start gap-2" style="background:var(--nc-light)">
-          <span class="material-symbols-outlined text-lg mt-0.5" style="color:var(--nc-primary)">sync_alt</span>
+        <div class="rounded-xl p-4 flex items-start gap-3" style="background:var(--nc-light)">
+          <span class="material-symbols-outlined text-2xl mt-0.5" style="color:var(--nc-primary)">sync_alt</span>
           <div>
-            <p class="text-[9px] font-black uppercase tracking-wider mb-0.5" style="color:var(--nc-primary)">Ruta <span id="cap-num">1</span> de <span id="cap-total">5</span> — <span id="cap-nombre-ruta"></span></p>
-            <p id="cap-instruccion" class="text-xs font-bold leading-snug" style="color:var(--nc-dark)"></p>
+            <p class="text-xs font-black uppercase tracking-wider mb-1" style="color:var(--nc-primary)">Ruta <span id="cap-num">1</span> de <span id="cap-total">5</span> — <span id="cap-nombre-ruta"></span></p>
+            <p id="cap-instruccion" class="text-base font-bold leading-snug" style="color:var(--nc-dark)"></p>
           </div>
         </div>
 
         <!-- Controles: modo vivo -->
-        <div id="cap-controles-vivo" class="flex flex-col items-stretch gap-2">
+        <div id="cap-controles-vivo" class="flex flex-col items-stretch gap-3">
           <button onclick="capturarFoto()" id="btn-capturar"
-            class="btn-accent w-full py-3 rounded-lg text-white text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2" disabled>
-            <span class="material-symbols-outlined text-base">camera</span>Capturar y analizar
+            class="btn-accent w-full py-5 rounded-xl text-white text-base font-black uppercase tracking-widest flex items-center justify-center gap-2" disabled>
+            <span class="material-symbols-outlined text-2xl">camera</span>Capturar y analizar
           </button>
-          <label class="flex items-center justify-center gap-1.5 text-[9px] font-bold text-slate-400 uppercase tracking-wide cursor-pointer select-none" title="Solo para la demo: fuerza que este paso salga NOK">
-            <input type="checkbox" id="chk-simular-defecto" class="rounded"/>Simular defecto (demo)
+          <label class="flex items-center justify-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wide cursor-pointer select-none py-1" title="Solo para la demo: fuerza que este paso salga NOK">
+            <input type="checkbox" id="chk-simular-defecto" class="rounded w-5 h-5"/>Simular defecto (demo)
           </label>
         </div>
 
         <!-- Controles: resultado OK -->
         <div id="cap-controles-ok" style="display:none">
           <button onclick="siguienteRuta()"
-            class="btn-lift w-full py-3 rounded-lg text-white text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2"
+            class="btn-lift w-full py-5 rounded-xl text-white text-base font-black uppercase tracking-widest flex items-center justify-center gap-2"
             style="background:var(--status-ok)">
-            <span class="material-symbols-outlined text-base">arrow_forward</span>Continuar
+            <span class="material-symbols-outlined text-2xl">arrow_forward</span>Continuar
           </button>
         </div>
 
         <!-- Controles: resultado NOK (bloqueo) -->
         <div id="cap-controles-nok" style="display:none">
-          <div class="rounded-xl p-3 mb-2 flex items-start gap-2" style="background:#fef2f2;border:1px solid #fecaca">
-            <span class="material-symbols-outlined text-lg mt-0.5" style="color:var(--status-critical)">report</span>
+          <div class="rounded-xl p-4 mb-3 flex items-start gap-3" style="background:#fef2f2;border:1px solid #fecaca">
+            <span class="material-symbols-outlined text-2xl mt-0.5" style="color:var(--status-critical)">report</span>
             <div>
-              <p class="text-[9px] font-black uppercase tracking-wider" style="color:var(--status-critical)">Defecto detectado</p>
-              <p id="cap-defecto-texto" class="text-xs font-bold leading-snug" style="color:var(--nc-dark)"></p>
+              <p class="text-xs font-black uppercase tracking-wider" style="color:var(--status-critical)">Defecto detectado</p>
+              <p id="cap-defecto-texto" class="text-base font-bold leading-snug" style="color:var(--nc-dark)"></p>
             </div>
           </div>
-          <div class="flex flex-col gap-2">
+          <div class="flex flex-col gap-3">
             <button onclick="etiquetarPieza()"
-              class="btn-lift w-full py-2.5 rounded-lg text-white text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2"
+              class="btn-lift w-full py-4 rounded-xl text-white text-base font-black uppercase tracking-widest flex items-center justify-center gap-2"
               style="background:var(--status-critical)">
-              <span class="material-symbols-outlined text-base">label</span>Etiquetar para retrabajo
+              <span class="material-symbols-outlined text-xl">label</span>Etiquetar para retrabajo
             </button>
             <button onclick="repetirCaptura()"
-              class="btn-lift w-full py-2.5 rounded-lg text-xs font-black uppercase tracking-widest border-2 border-slate-300 text-slate-500 hover:bg-slate-50 flex items-center justify-center gap-2">
-              <span class="material-symbols-outlined text-base">replay</span>Reintentar captura
+              class="btn-lift w-full py-4 rounded-xl text-base font-black uppercase tracking-widest border-2 border-slate-300 text-slate-500 hover:bg-slate-50 flex items-center justify-center gap-2">
+              <span class="material-symbols-outlined text-xl">replay</span>Reintentar captura
             </button>
           </div>
         </div>
@@ -366,8 +366,8 @@
       const icono = previa ? (previa.veredicto === 'OK' ? 'check' : 'close') : null;
       const activa = i === rutaActual;
       return `
-        <li class="flex items-center gap-2 text-[11px] font-bold" style="color:${activa ? 'var(--nc-dark)' : '#94a3b8'}">
-          <span class="step-dot ${cls}" style="width:22px;height:22px;font-size:10px">${icono ? `<span class="material-symbols-outlined" style="font-size:14px">${icono}</span>` : i + 1}</span>
+        <li class="flex items-center gap-2.5 text-sm font-bold" style="color:${activa ? 'var(--nc-dark)' : '#94a3b8'}">
+          <span class="step-dot ${cls}">${icono ? `<span class="material-symbols-outlined" style="font-size:16px">${icono}</span>` : i + 1}</span>
           ${r.nombre}
         </li>`;
     }).join('');
