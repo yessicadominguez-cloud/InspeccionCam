@@ -18,7 +18,7 @@
   }
   .card { background: #fff; border-radius: 1.25rem; border: 1px solid #eef2f7;
     box-shadow: 0 1px 2px rgba(11,58,91,.05), 0 16px 32px -16px rgba(11,58,91,.22); }
-  .step-dot { width: 34px; height: 34px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; flex-shrink: 0; transition: all .2s ease; }
+  .step-dot { width: 22px; height: 22px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 11px; flex-shrink: 0; transition: all .2s ease; }
   .step-dot.pendiente { background: #e7edf3; color: #a3b1c2; }
   .step-dot.actual    { background: var(--nc-accent); color: #fff; box-shadow: 0 0 0 5px rgba(51,159,198,.2); }
   .step-dot.hecho     { background: var(--status-ok); color: #fff; }
@@ -30,7 +30,7 @@
   .thumb { border-radius: 0.6rem; overflow: hidden; border: 2px solid #e2e8f0; box-shadow: 0 2px 6px rgba(11,58,91,.08); }
   .thumb.ok  { border-color: var(--status-ok); }
   .thumb.nok { border-color: var(--status-critical); }
-  .rutas-list li { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid #f1f5f9; font-size: 11px; font-weight: 700; }
+  .rutas-list li { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid #f1f5f9; font-size: 11px; font-weight: 700; }
   .rutas-list li:last-child { border-bottom: none; }
   @keyframes scan { 0% { top: -8%; } 100% { top: 108%; } }
   .scan-band {
@@ -69,10 +69,10 @@
   .btn-lift { transition: transform .12s ease, filter .12s ease, background .15s ease; }
   .btn-lift:hover { transform: translateY(-1px); filter: brightness(1.06); }
   .btn-lift:active { transform: translateY(0); }
-  .ref-panel { display: flex; align-items: center; gap: 14px; margin-top: 14px; background: #eef5fa; border-radius: 0.85rem;
-    padding: 10px 14px; border: 1px solid #dbe7f0; }
-  .ref-panel img { width: 100px; height: 74px; object-fit: cover; border-radius: 0.6rem; flex-shrink: 0; display: block; }
-  .ref-panel .ref-fallback { width: 100px; height: 74px; border-radius: 0.6rem; flex-shrink: 0; display: flex; flex-direction: column;
+  .ref-panel { display: flex; align-items: center; gap: 12px; margin-top: 10px; background: #eef5fa; border-radius: 0.75rem;
+    padding: 8px 12px; border: 1px solid #dbe7f0; }
+  .ref-panel img { width: 80px; height: 58px; object-fit: cover; border-radius: 0.5rem; flex-shrink: 0; display: block; }
+  .ref-panel .ref-fallback { width: 80px; height: 58px; border-radius: 0.5rem; flex-shrink: 0; display: flex; flex-direction: column;
     align-items: center; justify-content: center; gap: 3px; background: #dbe7f0; color: #5b7a91; }
   .ref-panel .ref-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--nc-primary); }
   .ref-panel .ref-ruta { font-size: 13px; font-weight: 700; color: var(--nc-dark); margin-top: 2px; }
@@ -91,6 +91,11 @@
     <span id="hd-proceso" class="truncate" style="color:#fff;font-weight:900;font-size:0.85rem;letter-spacing:0.2em;text-transform:uppercase">HONDA 25.5 SA · DISPLAY</span>
   </div>
   <div class="flex items-center gap-3 flex-shrink-0">
+    <div class="flex items-center gap-1.5">
+      <span id="cam-status-dot" class="w-2 h-2 rounded-full inline-block" style="background:#94a3b8"></span>
+      <span id="cam-status-text" class="text-[10px] font-black uppercase tracking-widest text-white/70">Conectando…</span>
+    </div>
+    <div style="width:1px;height:18px;background:rgba(255,255,255,0.2)" class="shrink-0"></div>
     <div id="hd-folio" class="text-[10px] font-bold text-white/60 uppercase tracking-wider font-mono" style="min-width:90px;text-align:right"></div>
     <a href="supervisor.html" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-white text-[10px] font-bold uppercase tracking-wider border border-white/20 hover:bg-white/10 transition">
       <span class="material-symbols-outlined text-sm">supervisor_account</span>Supervisor
@@ -98,7 +103,7 @@
   </div>
 </header>
 
-<main class="p-4" style="height:calc(100vh - 3rem); overflow:auto">
+<main style="padding:6px 12px; height:calc(100vh - 3rem); overflow:auto">
 
   <!-- ══════════════ PANTALLA 0: SELECCIÓN DE PROCESO ══════════════ -->
   <section id="pantalla-proceso" class="max-w-2xl mx-auto mt-10" style="display:none">
@@ -123,23 +128,19 @@
   </section>
 
   <!-- ══════════════ PANTALLA 1: INSPECTOR (cámara + panel lateral) ══════════════ -->
-  <section id="pantalla-captura" class="max-w-6xl mx-auto mt-4" style="display:none">
+  <section id="pantalla-captura" class="max-w-6xl mx-auto mt-1" style="display:none">
 
-    <div class="flex items-center justify-between mb-3">
-      <button onclick="mostrarPantalla('proceso')" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-[#034A77] transition py-2">
+    <div class="mb-1">
+      <button onclick="mostrarPantalla('proceso')" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-[#034A77] transition py-0.5">
         <span class="material-symbols-outlined">arrow_back</span>Cambiar proceso
       </button>
-      <div class="flex items-center gap-2">
-        <span id="cam-status-dot" class="w-2.5 h-2.5 rounded-full inline-block" style="background:#94a3b8"></span>
-        <span id="cam-status-text" class="text-xs font-black uppercase tracking-widest text-slate-400">Conectando…</span>
-      </div>
     </div>
 
     <div class="grid gap-4" style="grid-template-columns: 1fr 400px; align-items:start">
 
       <!-- Cámara (dominante) -->
       <div class="card p-4">
-        <div class="cam-frame" style="aspect-ratio:16/11">
+        <div class="cam-frame" style="aspect-ratio:16/9">
           <video id="cam-video" autoplay playsinline muted class="w-full h-full object-cover" style="display:none"></video>
           <canvas id="cam-still" class="w-full h-full object-cover" style="display:none"></canvas>
           <div id="cam-placeholder" class="absolute inset-0 flex flex-col items-center justify-center gap-2 text-slate-500">
@@ -176,11 +177,11 @@
       </div>
 
       <!-- Panel lateral -->
-      <div class="card p-5 flex flex-col gap-5">
+      <div class="card p-4 flex flex-col gap-2.5">
         <div>
-          <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Operador</label>
+          <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Operador</label>
           <select id="in-operador" onchange="cambiarOperador()"
-            class="w-full border-2 border-slate-200 rounded-lg px-3 py-3 text-sm font-semibold bg-white focus:border-[#339FC6] outline-none">
+            class="w-full border-2 border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold bg-white focus:border-[#339FC6] outline-none">
             <option>Operador A</option>
             <option>Operador B</option>
             <option>Operador C</option>
@@ -196,25 +197,25 @@
         </div>
 
         <div>
-          <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Cámara</label>
+          <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Cámara</label>
           <div class="flex items-center gap-2">
             <select id="in-camara" onchange="cambiarCamara()"
-              class="flex-1 min-w-0 border-2 border-slate-200 rounded-lg px-3 py-3 text-sm font-semibold bg-white focus:border-[#339FC6] outline-none">
+              class="flex-1 min-w-0 border-2 border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold bg-white focus:border-[#339FC6] outline-none">
               <option value="">Detectando…</option>
             </select>
             <button onclick="detectarCamaras()" title="Actualizar lista de cámaras"
-              class="w-12 h-12 rounded-lg border-2 border-slate-200 flex items-center justify-center hover:bg-slate-50 flex-shrink-0">
+              class="w-11 h-11 rounded-lg border-2 border-slate-200 flex items-center justify-center hover:bg-slate-50 flex-shrink-0">
               <span class="material-symbols-outlined text-xl" style="color:var(--nc-accent)">refresh</span>
             </button>
           </div>
         </div>
 
         <div>
-          <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Rutas de inspección</label>
-          <ul id="sidebar-rutas" class="flex flex-col gap-2.5"></ul>
+          <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Rutas de inspección</label>
+          <ul id="sidebar-rutas" class="flex flex-col gap-1.5"></ul>
         </div>
 
-        <div class="rounded-xl p-4 flex items-start gap-3" style="background:var(--nc-light)">
+        <div class="rounded-xl p-2.5 flex items-start gap-3" style="background:var(--nc-light)">
           <span class="material-symbols-outlined text-2xl mt-0.5" style="color:var(--nc-primary)">sync_alt</span>
           <div>
             <p class="text-xs font-black uppercase tracking-wider mb-1" style="color:var(--nc-primary)">Ruta <span id="cap-num">1</span> de <span id="cap-total">5</span> — <span id="cap-nombre-ruta"></span></p>
@@ -223,12 +224,12 @@
         </div>
 
         <!-- Controles: modo vivo -->
-        <div id="cap-controles-vivo" class="flex flex-col items-stretch gap-3">
+        <div id="cap-controles-vivo" class="flex flex-col items-stretch gap-2">
           <button onclick="capturarFoto()" id="btn-capturar"
-            class="btn-accent w-full py-5 rounded-xl text-white text-base font-black uppercase tracking-widest flex items-center justify-center gap-2" disabled>
+            class="btn-accent w-full py-4 rounded-xl text-white text-base font-black uppercase tracking-widest flex items-center justify-center gap-2" disabled>
             <span class="material-symbols-outlined text-2xl">camera</span>Capturar y analizar
           </button>
-          <label class="flex items-center justify-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wide cursor-pointer select-none py-1" title="Solo para la demo: fuerza que este paso salga NOK">
+          <label class="flex items-center justify-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wide cursor-pointer select-none" title="Solo para la demo: fuerza que este paso salga NOK">
             <input type="checkbox" id="chk-simular-defecto" class="rounded w-5 h-5"/>Simular defecto (demo)
           </label>
         </div>
@@ -236,7 +237,7 @@
         <!-- Controles: resultado OK -->
         <div id="cap-controles-ok" style="display:none">
           <button onclick="siguienteRuta()"
-            class="btn-lift w-full py-5 rounded-xl text-white text-base font-black uppercase tracking-widest flex items-center justify-center gap-2"
+            class="btn-lift w-full py-4 rounded-xl text-white text-base font-black uppercase tracking-widest flex items-center justify-center gap-2"
             style="background:var(--status-ok)">
             <span class="material-symbols-outlined text-2xl">arrow_forward</span>Continuar
           </button>
@@ -244,21 +245,21 @@
 
         <!-- Controles: resultado NOK (bloqueo) -->
         <div id="cap-controles-nok" style="display:none">
-          <div class="rounded-xl p-4 mb-3 flex items-start gap-3" style="background:#fef2f2;border:1px solid #fecaca">
+          <div class="rounded-xl p-2 mb-1.5 flex items-start gap-3" style="background:#fef2f2;border:1px solid #fecaca">
             <span class="material-symbols-outlined text-2xl mt-0.5" style="color:var(--status-critical)">report</span>
             <div>
               <p class="text-xs font-black uppercase tracking-wider" style="color:var(--status-critical)">Defecto detectado</p>
               <p id="cap-defecto-texto" class="text-base font-bold leading-snug" style="color:var(--nc-dark)"></p>
             </div>
           </div>
-          <div class="flex flex-col gap-3">
+          <div class="flex flex-col gap-1.5">
             <button onclick="etiquetarPieza()"
-              class="btn-lift w-full py-4 rounded-xl text-white text-base font-black uppercase tracking-widest flex items-center justify-center gap-2"
+              class="btn-lift w-full py-2.5 rounded-xl text-white text-base font-black uppercase tracking-widest flex items-center justify-center gap-2"
               style="background:var(--status-critical)">
               <span class="material-symbols-outlined text-xl">label</span>Etiquetar para retrabajo
             </button>
             <button onclick="repetirCaptura()"
-              class="btn-lift w-full py-4 rounded-xl text-base font-black uppercase tracking-widest border-2 border-slate-300 text-slate-500 hover:bg-slate-50 flex items-center justify-center gap-2">
+              class="btn-lift w-full py-2.5 rounded-xl text-base font-black uppercase tracking-widest border-2 border-slate-300 text-slate-500 hover:bg-slate-50 flex items-center justify-center gap-2">
               <span class="material-symbols-outlined text-xl">replay</span>Reintentar captura
             </button>
           </div>
