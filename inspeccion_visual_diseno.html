@@ -69,16 +69,22 @@
   .btn-lift { transition: transform .12s ease, filter .12s ease, background .15s ease; }
   .btn-lift:hover { transform: translateY(-1px); filter: brightness(1.06); }
   .btn-lift:active { transform: translateY(0); }
-  .ref-panel { display: flex; align-items: center; gap: 12px; margin-top: 10px; background: #eef5fa; border-radius: 0.75rem;
-    padding: 8px 12px; border: 1px solid #dbe7f0; }
-  .ref-panel img { width: 80px; height: 58px; object-fit: cover; border-radius: 0.5rem; flex-shrink: 0; display: block; }
-  .ref-panel .ref-fallback { width: 80px; height: 58px; border-radius: 0.5rem; flex-shrink: 0; display: flex; flex-direction: column;
+  .ref-panel { display: flex; align-items: center; gap: 14px; margin-top: 10px; background: #eef5fa; border-radius: 0.85rem;
+    padding: 10px 14px; border: 1px solid #dbe7f0; }
+  .ref-panel img { width: 120px; height: 88px; object-fit: cover; border-radius: 0.6rem; flex-shrink: 0; display: block; }
+  .ref-panel .ref-fallback { width: 120px; height: 88px; border-radius: 0.6rem; flex-shrink: 0; display: flex; flex-direction: column;
     align-items: center; justify-content: center; gap: 3px; background: #dbe7f0; color: #5b7a91; }
-  .ref-panel .ref-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--nc-primary); }
-  .ref-panel .ref-ruta { font-size: 13px; font-weight: 700; color: var(--nc-dark); margin-top: 2px; }
-  .contador-piezas { display: flex; align-items: center; gap: 10px; border-radius: 0.85rem; padding: 10px 14px;
-    background: var(--nc-light); }
-  .contador-piezas .num { font-size: 1.5rem; font-weight: 900; color: var(--nc-primary); line-height: 1; }
+  .ref-panel .ref-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--nc-primary); }
+  .ref-panel .ref-ruta { font-size: 15px; font-weight: 700; color: var(--nc-dark); margin-top: 2px; }
+  .stat-mini { border-radius: 0.65rem; padding: 8px 4px; text-align: center; }
+  .stat-mini .stat-num { font-size: 1.2rem; font-weight: 900; line-height: 1; }
+  .stat-mini .stat-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; }
+  .stat-total { background: var(--nc-light); }
+  .stat-total .stat-num, .stat-total .stat-label { color: var(--nc-primary); }
+  .stat-ok { background: #d1fae5; }
+  .stat-ok .stat-num, .stat-ok .stat-label { color: #047857; }
+  .stat-nok { background: #fee2e2; }
+  .stat-nok .stat-num, .stat-nok .stat-label { color: #b91c1c; }
 </style>
 </head>
 <body>
@@ -91,9 +97,9 @@
     <span id="hd-proceso" class="truncate" style="color:#fff;font-weight:900;font-size:0.85rem;letter-spacing:0.2em;text-transform:uppercase">HONDA 25.5 SA · DISPLAY</span>
   </div>
   <div class="flex items-center gap-3 flex-shrink-0">
-    <div class="flex items-center gap-1.5">
-      <span id="cam-status-dot" class="w-2 h-2 rounded-full inline-block" style="background:#94a3b8"></span>
-      <span id="cam-status-text" class="text-[10px] font-black uppercase tracking-widest text-white/70">Conectando…</span>
+    <div class="flex items-center gap-1.5 px-2 py-1 rounded-md" style="background:rgba(255,255,255,.08)">
+      <span class="material-symbols-outlined text-sm" style="color:#BFEDF6">image</span>
+      <span class="text-[10px] font-black uppercase tracking-widest text-white/70">Modo mockup</span>
     </div>
     <div style="width:1px;height:18px;background:rgba(255,255,255,0.2)" class="shrink-0"></div>
     <div id="hd-folio" class="text-[10px] font-bold text-white/60 uppercase tracking-wider font-mono" style="min-width:90px;text-align:right"></div>
@@ -141,12 +147,8 @@
       <!-- Cámara (dominante) -->
       <div class="card p-4">
         <div class="cam-frame" style="aspect-ratio:16/9">
-          <video id="cam-video" autoplay playsinline muted class="w-full h-full object-cover" style="display:none"></video>
+          <img id="cam-mock-img" alt="Vista de la pieza" class="w-full h-full object-cover"/>
           <canvas id="cam-still" class="w-full h-full object-cover" style="display:none"></canvas>
-          <div id="cam-placeholder" class="absolute inset-0 flex flex-col items-center justify-center gap-2 text-slate-500">
-            <span class="material-symbols-outlined text-4xl">videocam_off</span>
-            <span class="text-xs font-bold">Solicitando acceso a la cámara…</span>
-          </div>
           <div id="cam-analizando" class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/25" style="display:none;overflow:hidden">
             <div class="scan-grid"></div>
             <div class="scan-corner tl"></div>
@@ -161,9 +163,6 @@
             <span id="cam-veredicto-badge" class="text-sm font-black uppercase tracking-widest px-4 py-2 rounded-lg shadow-lg"></span>
           </div>
         </div>
-        <canvas id="cam-buffer" style="display:none"></canvas>
-        <p id="cam-error" class="text-[11px] font-bold mt-3 text-center" style="color:var(--status-critical)"></p>
-
         <div id="ref-panel" class="ref-panel">
           <img id="ref-img" alt="Referencia de posición"/>
           <div id="ref-fallback" class="ref-fallback" style="display:none">
@@ -188,25 +187,18 @@
           </select>
         </div>
 
-        <div class="contador-piezas">
-          <span class="material-symbols-outlined text-2xl" style="color:var(--nc-primary)">inventory_2</span>
-          <div>
-            <div class="num"><span id="contador-piezas-num">0</span></div>
-            <p class="text-[10px] font-bold uppercase tracking-wider" style="color:var(--nc-primary)">Piezas hoy</p>
+        <div class="grid grid-cols-3 gap-2">
+          <div class="stat-mini stat-total">
+            <div class="stat-num" id="contador-piezas-num">0</div>
+            <p class="stat-label">Hoy</p>
           </div>
-        </div>
-
-        <div>
-          <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Cámara</label>
-          <div class="flex items-center gap-2">
-            <select id="in-camara" onchange="cambiarCamara()"
-              class="flex-1 min-w-0 border-2 border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold bg-white focus:border-[#339FC6] outline-none">
-              <option value="">Detectando…</option>
-            </select>
-            <button onclick="detectarCamaras()" title="Actualizar lista de cámaras"
-              class="w-11 h-11 rounded-lg border-2 border-slate-200 flex items-center justify-center hover:bg-slate-50 flex-shrink-0">
-              <span class="material-symbols-outlined text-xl" style="color:var(--nc-accent)">refresh</span>
-            </button>
+          <div class="stat-mini stat-ok">
+            <div class="stat-num" id="contador-buenas-num">0</div>
+            <p class="stat-label">Buenas</p>
+          </div>
+          <div class="stat-mini stat-nok">
+            <div class="stat-num" id="contador-malas-num">0</div>
+            <p class="stat-label">Malas</p>
           </div>
         </div>
 
@@ -226,7 +218,7 @@
         <!-- Controles: modo vivo -->
         <div id="cap-controles-vivo" class="flex flex-col items-stretch gap-2">
           <button onclick="capturarFoto()" id="btn-capturar"
-            class="btn-accent w-full py-4 rounded-xl text-white text-base font-black uppercase tracking-widest flex items-center justify-center gap-2" disabled>
+            class="btn-accent w-full py-4 rounded-xl text-white text-base font-black uppercase tracking-widest flex items-center justify-center gap-2">
             <span class="material-symbols-outlined text-2xl">camera</span>Capturar y analizar
           </button>
           <label class="flex items-center justify-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wide cursor-pointer select-none" title="Solo para la demo: fuerza que este paso salga NOK">
@@ -302,7 +294,6 @@
   let rutaActual = 0;
   let capturas = [];          // [{ ruta, dataUrl, veredicto: 'OK'|'NOK' }]
   let folio = '';
-  let stream = null;
   let veredictoActual = null; // 'OK' | 'NOK' del frame recién analizado
   let dataUrlActual = null;
 
@@ -314,13 +305,15 @@
     actualizarContadorPiezas();
   }
 
-  // ── Contador de piezas procesadas hoy por el operador seleccionado ──────────
+  // ── Contadores de piezas procesadas hoy por el operador seleccionado ────────
   function actualizarContadorPiezas() {
     const hoy = new Date().toDateString();
-    const total = ivLeerHistorial().filter(r =>
+    const registros = ivLeerHistorial().filter(r =>
       r.operador === selectOperador.value && new Date(r.fecha).toDateString() === hoy
-    ).length;
-    document.getElementById('contador-piezas-num').textContent = total;
+    );
+    document.getElementById('contador-piezas-num').textContent = registros.length;
+    document.getElementById('contador-buenas-num').textContent = registros.filter(r => r.resultado === 'aprobado').length;
+    document.getElementById('contador-malas-num').textContent = registros.filter(r => r.resultado === 'rechazado').length;
   }
 
   // ── Pantalla 0 → 1: no se pide folio/ID, arranca directo la cámara ──────────
@@ -329,7 +322,7 @@
     iniciarInspeccion();
   }
 
-  async function iniciarInspeccion() {
+  function iniciarInspeccion() {
     capturas = [];
     rutaActual = 0;
     // ID de trazabilidad autogenerado — no requiere captura manual del operador.
@@ -342,83 +335,6 @@
     actualizarInstruccion();
     actualizarContadorPiezas();
     repetirCaptura(); // limpia cualquier panel OK/NOK que haya quedado de una inspección previa
-    await iniciarCamara();
-  }
-
-  // ── Selección de cámara (externa, USB) ─────────────────────────────────────
-  // Sin esto el navegador agarra cualquier cámara por default (ej. la integrada
-  // del laptop en vez de la externa fija que realmente ve la pieza).
-  async function detectarCamaras() {
-    const select = document.getElementById('in-camara');
-    select.innerHTML = '<option value="">Detectando cámaras…</option>';
-    try {
-      let permStream = null;
-      const dispositivos0 = await navigator.mediaDevices.enumerateDevices();
-      const sinEtiquetas = dispositivos0.some(d => d.kind === 'videoinput' && !d.label);
-      if (sinEtiquetas) {
-        permStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-      }
-
-      const dispositivos = await navigator.mediaDevices.enumerateDevices();
-      const camaras = dispositivos.filter(d => d.kind === 'videoinput');
-      if (permStream) permStream.getTracks().forEach(t => t.stop());
-
-      if (!camaras.length) {
-        select.innerHTML = '<option value="">No se detectó ninguna cámara</option>';
-        return;
-      }
-      select.innerHTML = camaras.map((c, i) => `<option value="${c.deviceId}">${c.label || 'Cámara ' + (i + 1)}</option>`).join('');
-      const idxNoIntegrada = camaras.findIndex(c => !/integrat|built-?in|facetime/i.test(c.label || ''));
-      if (idxNoIntegrada > 0) select.value = camaras[idxNoIntegrada].deviceId;
-    } catch (e) {
-      select.innerHTML = '<option value="">No se pudo listar cámaras (revisa permisos)</option>';
-      console.warn('[InspeccionVisual] enumerateDevices falló:', e.message);
-    }
-  }
-
-  function setEstadoCamara(estado, texto) {
-    const colores = { conectando: '#94a3b8', online: 'var(--status-ok)', error: 'var(--status-critical)' };
-    document.getElementById('cam-status-dot').style.background = colores[estado];
-    document.getElementById('cam-status-text').textContent = texto;
-    document.getElementById('cam-status-text').style.color = estado === 'conectando' ? '#94a3b8' : colores[estado];
-  }
-
-  async function iniciarCamara() {
-    const video = document.getElementById('cam-video');
-    const placeholder = document.getElementById('cam-placeholder');
-    const deviceId = document.getElementById('in-camara').value;
-    const constraints = deviceId
-      ? { video: { deviceId: { exact: deviceId } }, audio: false }
-      : { video: true, audio: false };
-    setEstadoCamara('conectando', 'Conectando…');
-    try {
-      stream = await navigator.mediaDevices.getUserMedia(constraints);
-      video.srcObject = stream;
-      video.style.display = 'block';
-      placeholder.style.display = 'none';
-      document.getElementById('btn-capturar').disabled = false;
-      setEstadoCamara('online', 'En línea');
-    } catch (e) {
-      placeholder.innerHTML = `
-        <span class="material-symbols-outlined text-4xl" style="color:var(--status-critical)">videocam_off</span>
-        <span class="text-xs font-bold text-center px-4">No se pudo acceder a la cámara seleccionada.<br>Revisa que esté conectada y los permisos del navegador.</span>
-        <button onclick="iniciarCamara()" class="mt-2 px-4 py-1.5 rounded-lg text-white text-[10px] font-bold uppercase" style="background:var(--nc-accent)">Reintentar</button>`;
-      setEstadoCamara('error', 'Sin conexión');
-      console.warn('[InspeccionVisual] getUserMedia falló:', e.message);
-    }
-  }
-
-  async function cambiarCamara() {
-    detenerCamara();
-    document.getElementById('cam-video').style.display = 'none';
-    document.getElementById('cam-still').style.display = 'none';
-    document.getElementById('cam-placeholder').style.display = 'flex';
-    document.getElementById('btn-capturar').disabled = true;
-    await iniciarCamara();
-  }
-
-  function detenerCamara() {
-    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
   }
 
   // ── Progreso: lista de rutas en el panel lateral ────────────────────────────
@@ -449,6 +365,8 @@
   // Los archivos reales (fotos que compartió Forvia) van en ref/<archivo>, con el
   // nombre indicado en RUTAS[].imagenRef. Mientras no exista el archivo se muestra
   // un placeholder — nunca se inventa una imagen.
+  // La vista "cámara" también usa esta misma foto por ahora: es un mockup, no hay
+  // inferencia real, así que no vale la pena mantener una captura de cámara en vivo.
   function actualizarImagenReferencia(ruta) {
     const img = document.getElementById('ref-img');
     const fallback = document.getElementById('ref-fallback');
@@ -458,22 +376,19 @@
     img.onerror = () => { img.style.display = 'none'; fallback.style.display = 'flex'; };
     img.onload = () => { img.style.display = 'block'; fallback.style.display = 'none'; };
     img.src = ruta.imagenRef;
+
+    document.getElementById('cam-mock-img').src = ruta.imagenRef;
   }
 
   // ── Captura + análisis simulado ────────────────────────────────────────────
   function capturarFoto() {
-    const video = document.getElementById('cam-video');
-    const buffer = document.getElementById('cam-buffer');
-    buffer.width = video.videoWidth;
-    buffer.height = video.videoHeight;
-    buffer.getContext('2d').drawImage(video, 0, 0, buffer.width, buffer.height);
-
+    const mockImg = document.getElementById('cam-mock-img');
     const still = document.getElementById('cam-still');
-    still.width = buffer.width;
-    still.height = buffer.height;
-    still.getContext('2d').drawImage(buffer, 0, 0);
+    still.width = mockImg.naturalWidth || 800;
+    still.height = mockImg.naturalHeight || 600;
+    still.getContext('2d').drawImage(mockImg, 0, 0, still.width, still.height);
 
-    video.style.display = 'none';
+    mockImg.style.display = 'none';
     still.style.display = 'block';
 
     document.getElementById('cap-controles-vivo').style.display = 'none';
@@ -528,7 +443,7 @@
 
   function repetirCaptura() {
     document.getElementById('cam-still').style.display = 'none';
-    document.getElementById('cam-video').style.display = 'block';
+    document.getElementById('cam-mock-img').style.display = 'block';
     document.getElementById('cam-veredicto').style.display = 'none';
     document.getElementById('cap-controles-vivo').style.display = 'flex';
     document.getElementById('cap-controles-ok').style.display = 'none';
@@ -543,7 +458,6 @@
     rutaActual++;
 
     if (rutaActual >= RUTAS.length) {
-      detenerCamara();
       mostrarFinal('aprobado');
       return;
     }
@@ -555,7 +469,6 @@
 
   function etiquetarPieza() {
     capturas.push({ ruta: RUTAS[rutaActual].nombre, dataUrl: dataUrlActual, veredicto: 'NOK', defecto: RUTAS[rutaActual].defecto });
-    detenerCamara();
     construirProgreso();
     mostrarFinal('rechazado');
   }
@@ -617,13 +530,8 @@
     });
   }
 
-  // Arranca directo en la cámara — sin pantalla de selección de proceso intermedia.
-  // detectarCamaras() debe terminar antes de abrir el stream real (si se traslapan,
-  // el getUserMedia de la cámara real se queda colgado esperando el temporal).
-  (async () => {
-    await detectarCamaras();
-    seleccionarProceso('if');
-  })();
+  // Arranca directo en la vista de inspección — sin pantalla de selección de proceso intermedia.
+  seleccionarProceso('if');
 </script>
 
 </body>
