@@ -6,7 +6,7 @@ Piezas en buen estado (imagenRef, una por ruta):
   perilla.webp          -> Apariencia de Perilla
   etiqueta.webp          -> Verificacion de Etiqueta
   back-over.webp         -> Apariencia de Back Over
-  clips-brackets.png     -> Clips, Brackets y Felpas
+  clips-brackets.webp    -> Clips, Brackets y Felpas
   pantalla.webp          -> Golpes y Rayones en Pantalla
 
 Piezas con defecto real (imagenDefecto) — se muestran cuando el operador
