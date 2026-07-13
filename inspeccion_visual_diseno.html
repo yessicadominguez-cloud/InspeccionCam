@@ -277,17 +277,24 @@
 
 <script>
   // ── Rutas de inspección (FAU-F-PSG-0241, Proceso I.F., HONDA 25.5 SA) ─────────
+  // defectoBox: recuadro rojo sobre imagenDefecto, como fracción (0-1) del tamaño
+  // real de esa foto — ubicado a mano viendo dónde está el defecto en cada una.
   const RUTAS = [
     { nombre: 'Apariencia de Perilla', instruccion: 'Gira la pieza y expón el lateral: la perilla debe quedar de frente a la cámara.',
-      defecto: 'Rayón / golpe detectado en la perilla', imagenRef: 'ref/perilla.webp', imagenDefecto: 'ref/perilla-defecto.webp' },
+      defecto: 'Rayón / golpe detectado en la perilla', imagenRef: 'ref/perilla.webp', imagenDefecto: 'ref/perilla-defecto.webp',
+      defectoBox: { x: 0.34, y: 0.38, w: 0.16, h: 0.27 } },
     { nombre: 'Verificación de Etiqueta', instruccion: 'Coloca la pieza con la etiqueta de frente a la cámara, sin inclinación.',
-      defecto: 'Etiqueta ilegible, QR incompleto o mal posicionada', imagenRef: 'ref/etiqueta.webp', imagenDefecto: 'ref/etiqueta-defecto.webp' },
+      defecto: 'Etiqueta ilegible, QR incompleto o mal posicionada', imagenRef: 'ref/etiqueta.webp', imagenDefecto: 'ref/etiqueta-defecto.webp',
+      defectoBox: { x: 0.34, y: 0.20, w: 0.34, h: 0.09 } },
     { nombre: 'Apariencia de Back Over', instruccion: 'Gira la pieza para exponer el back over hacia la cámara.',
-      defecto: 'Rayón o defecto superficial detectado en Back Over', imagenRef: 'ref/back-over.webp', imagenDefecto: 'ref/back-over-defecto.webp' },
+      defecto: 'Rayón o defecto superficial detectado en Back Over', imagenRef: 'ref/back-over.webp', imagenDefecto: 'ref/back-over-defecto.webp',
+      defectoBox: { x: 0.20, y: 0.47, w: 0.24, h: 0.24 } },
     { nombre: 'Clips, Brackets y Felpas', instruccion: 'Expón la parte trasera / cavidades para revisar el detalle interno.',
-      defecto: 'Clip, bracket o felpa faltante o mal colocado', imagenRef: 'ref/clips-brackets.png', imagenDefecto: 'ref/clips-brackets-defecto.webp' },
+      defecto: 'Clip, bracket o felpa faltante o mal colocado', imagenRef: 'ref/clips-brackets.png', imagenDefecto: 'ref/clips-brackets-defecto.webp',
+      defectoBox: { x: 0.49, y: 0.40, w: 0.16, h: 0.15 } },
     { nombre: 'Golpes y Rayones en Pantalla', instruccion: 'Coloca la pieza de frente, con la pantalla hacia la cámara.',
-      defecto: 'Golpe o rayón detectado en pantalla', imagenRef: 'ref/pantalla.webp', imagenDefecto: 'ref/pantalla-defecto.webp' },
+      defecto: 'Golpe o rayón detectado en pantalla', imagenRef: 'ref/pantalla.webp', imagenDefecto: 'ref/pantalla-defecto.webp',
+      defectoBox: { x: 0.17, y: 0.20, w: 0.64, h: 0.56 } },
   ];
 
   // ── Estado ──────────────────────────────────────────────────────────────────
@@ -410,7 +417,28 @@
 
   function resolverAnalisis(forzarDefecto) {
     const still = document.getElementById('cam-still');
+    const ctx = still.getContext('2d');
     veredictoActual = forzarDefecto ? 'NOK' : 'OK';
+
+    if (veredictoActual === 'NOK') {
+      // Recuadro rojo sobre la posición real del defecto (RUTAS[].defectoBox),
+      // no una posición aleatoria — así coincide con la foto real del defecto.
+      const box = RUTAS[rutaActual].defectoBox;
+      if (box) {
+        const bx = box.x * still.width, by = box.y * still.height;
+        const bw = box.w * still.width, bh = box.h * still.height;
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(bx, by, bw, bh);
+        ctx.fillStyle = '#ef4444';
+        const label = 'DEFECTO';
+        ctx.font = 'bold 18px sans-serif';
+        const tw = ctx.measureText(label).width;
+        ctx.fillRect(bx, by - 26, tw + 16, 26);
+        ctx.fillStyle = '#fff';
+        ctx.fillText(label, bx + 8, by - 7);
+      }
+    }
 
     dataUrlActual = still.toDataURL('image/jpeg', 0.92);
 
