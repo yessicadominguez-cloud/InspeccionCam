@@ -279,15 +279,15 @@
   // ── Rutas de inspección (FAU-F-PSG-0241, Proceso I.F., HONDA 25.5 SA) ─────────
   const RUTAS = [
     { nombre: 'Apariencia de Perilla', instruccion: 'Gira la pieza y expón el lateral: la perilla debe quedar de frente a la cámara.',
-      defecto: 'Rayón / golpe detectado en la perilla', imagenRef: 'ref/perilla.webp' },
+      defecto: 'Rayón / golpe detectado en la perilla', imagenRef: 'ref/perilla.webp', imagenDefecto: 'ref/perilla-defecto.webp' },
     { nombre: 'Verificación de Etiqueta', instruccion: 'Coloca la pieza con la etiqueta de frente a la cámara, sin inclinación.',
-      defecto: 'Etiqueta ilegible, QR incompleto o mal posicionada', imagenRef: 'ref/etiqueta.webp' },
+      defecto: 'Etiqueta ilegible, QR incompleto o mal posicionada', imagenRef: 'ref/etiqueta.webp', imagenDefecto: 'ref/etiqueta-defecto.webp' },
     { nombre: 'Apariencia de Back Over', instruccion: 'Gira la pieza para exponer el back over hacia la cámara.',
-      defecto: 'Rayón o defecto superficial detectado en Back Over', imagenRef: 'ref/back-over.webp' },
+      defecto: 'Rayón o defecto superficial detectado en Back Over', imagenRef: 'ref/back-over.webp', imagenDefecto: 'ref/back-over-defecto.webp' },
     { nombre: 'Clips, Brackets y Felpas', instruccion: 'Expón la parte trasera / cavidades para revisar el detalle interno.',
-      defecto: 'Clip, bracket o felpa faltante o mal colocado', imagenRef: 'ref/clips-brackets.png' },
+      defecto: 'Clip, bracket o felpa faltante o mal colocado', imagenRef: 'ref/clips-brackets.png', imagenDefecto: 'ref/clips-brackets-defecto.webp' },
     { nombre: 'Golpes y Rayones en Pantalla', instruccion: 'Coloca la pieza de frente, con la pantalla hacia la cámara.',
-      defecto: 'Golpe o rayón detectado en pantalla', imagenRef: 'ref/pantalla.webp' },
+      defecto: 'Golpe o rayón detectado en pantalla', imagenRef: 'ref/pantalla.webp', imagenDefecto: 'ref/pantalla-defecto.webp' },
   ];
 
   // ── Estado ──────────────────────────────────────────────────────────────────
@@ -381,44 +381,36 @@
   }
 
   // ── Captura + análisis simulado ────────────────────────────────────────────
+  // Con "Simular defecto" activo se captura la foto real con el defecto (carpeta
+  // ref/, RUTAS[].imagenDefecto) en vez de la pieza en buen estado — ya no se
+  // dibuja un cuadro rojo aleatorio, porque no coincidiría con el defecto real.
   function capturarFoto() {
+    const forzarDefecto = document.getElementById('chk-simular-defecto').checked;
+    const ruta = RUTAS[rutaActual];
+    const srcPath = (forzarDefecto && ruta.imagenDefecto) ? ruta.imagenDefecto : ruta.imagenRef;
+
     const mockImg = document.getElementById('cam-mock-img');
     const still = document.getElementById('cam-still');
-    still.width = mockImg.naturalWidth || 800;
-    still.height = mockImg.naturalHeight || 600;
-    still.getContext('2d').drawImage(mockImg, 0, 0, still.width, still.height);
+    const captura = new Image();
+    captura.onload = () => {
+      still.width = captura.naturalWidth;
+      still.height = captura.naturalHeight;
+      still.getContext('2d').drawImage(captura, 0, 0);
 
-    mockImg.style.display = 'none';
-    still.style.display = 'block';
+      mockImg.style.display = 'none';
+      still.style.display = 'block';
 
-    document.getElementById('cap-controles-vivo').style.display = 'none';
-    document.getElementById('cam-analizando').style.display = 'flex';
+      document.getElementById('cap-controles-vivo').style.display = 'none';
+      document.getElementById('cam-analizando').style.display = 'flex';
 
-    const forzarDefecto = document.getElementById('chk-simular-defecto').checked;
-    setTimeout(() => resolverAnalisis(forzarDefecto), 1100);
+      setTimeout(() => resolverAnalisis(forzarDefecto), 1100);
+    };
+    captura.src = srcPath;
   }
 
   function resolverAnalisis(forzarDefecto) {
     const still = document.getElementById('cam-still');
-    const ctx = still.getContext('2d');
     veredictoActual = forzarDefecto ? 'NOK' : 'OK';
-
-    if (veredictoActual === 'NOK') {
-      // Bounding box simulado sobre la captura, como lo dibujaría deviceWISE VIEW.
-      const bw = still.width * 0.28, bh = still.height * 0.22;
-      const bx = still.width * 0.36 + (Math.random() - 0.5) * still.width * 0.15;
-      const by = still.height * 0.38 + (Math.random() - 0.5) * still.height * 0.15;
-      ctx.strokeStyle = '#ef4444';
-      ctx.lineWidth = 4;
-      ctx.strokeRect(bx, by, bw, bh);
-      ctx.fillStyle = '#ef4444';
-      const label = 'DEFECTO';
-      ctx.font = 'bold 18px sans-serif';
-      const tw = ctx.measureText(label).width;
-      ctx.fillRect(bx, by - 26, tw + 16, 26);
-      ctx.fillStyle = '#fff';
-      ctx.fillText(label, bx + 8, by - 7);
-    }
 
     dataUrlActual = still.toDataURL('image/jpeg', 0.92);
 
