@@ -69,6 +69,16 @@
   .btn-lift { transition: transform .12s ease, filter .12s ease, background .15s ease; }
   .btn-lift:hover { transform: translateY(-1px); filter: brightness(1.06); }
   .btn-lift:active { transform: translateY(0); }
+  .ref-panel { display: flex; align-items: center; gap: 14px; margin-top: 14px; background: #eef5fa; border-radius: 0.85rem;
+    padding: 10px 14px; border: 1px solid #dbe7f0; }
+  .ref-panel img { width: 100px; height: 74px; object-fit: cover; border-radius: 0.6rem; flex-shrink: 0; display: block; }
+  .ref-panel .ref-fallback { width: 100px; height: 74px; border-radius: 0.6rem; flex-shrink: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 3px; background: #dbe7f0; color: #5b7a91; }
+  .ref-panel .ref-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--nc-primary); }
+  .ref-panel .ref-ruta { font-size: 13px; font-weight: 700; color: var(--nc-dark); margin-top: 2px; }
+  .contador-piezas { display: flex; align-items: center; gap: 10px; border-radius: 0.85rem; padding: 10px 14px;
+    background: var(--nc-light); }
+  .contador-piezas .num { font-size: 1.5rem; font-weight: 900; color: var(--nc-primary); line-height: 1; }
 </style>
 </head>
 <body>
@@ -152,6 +162,17 @@
         </div>
         <canvas id="cam-buffer" style="display:none"></canvas>
         <p id="cam-error" class="text-[11px] font-bold mt-3 text-center" style="color:var(--status-critical)"></p>
+
+        <div id="ref-panel" class="ref-panel">
+          <img id="ref-img" alt="Referencia de posición"/>
+          <div id="ref-fallback" class="ref-fallback" style="display:none">
+            <span class="material-symbols-outlined text-2xl">image_not_supported</span>
+          </div>
+          <div>
+            <p class="ref-label">Cómo colocar la pieza</p>
+            <p id="ref-ruta-nombre" class="ref-ruta"></p>
+          </div>
+        </div>
       </div>
 
       <!-- Panel lateral -->
@@ -164,6 +185,14 @@
             <option>Operador B</option>
             <option>Operador C</option>
           </select>
+        </div>
+
+        <div class="contador-piezas">
+          <span class="material-symbols-outlined text-2xl" style="color:var(--nc-primary)">inventory_2</span>
+          <div>
+            <div class="num"><span id="contador-piezas-num">0</span></div>
+            <p class="text-[10px] font-bold uppercase tracking-wider" style="color:var(--nc-primary)">Piezas hoy</p>
+          </div>
         </div>
 
         <div>
@@ -257,15 +286,15 @@
   // ── Rutas de inspección (FAU-F-PSG-0241, Proceso I.F., HONDA 25.5 SA) ─────────
   const RUTAS = [
     { nombre: 'Apariencia de Perilla', instruccion: 'Gira la pieza y expón el lateral: la perilla debe quedar de frente a la cámara.',
-      defecto: 'Rayón / golpe detectado en la perilla' },
+      defecto: 'Rayón / golpe detectado en la perilla', imagenRef: 'ref/perilla.jpg' },
     { nombre: 'Verificación de Etiqueta', instruccion: 'Coloca la pieza con la etiqueta de frente a la cámara, sin inclinación.',
-      defecto: 'Etiqueta ilegible, QR incompleto o mal posicionada' },
+      defecto: 'Etiqueta ilegible, QR incompleto o mal posicionada', imagenRef: 'ref/etiqueta.jpg' },
     { nombre: 'Apariencia de Back Over', instruccion: 'Gira la pieza para exponer el back over hacia la cámara.',
-      defecto: 'Rayón o defecto superficial detectado en Back Over' },
+      defecto: 'Rayón o defecto superficial detectado en Back Over', imagenRef: 'ref/back-over.jpg' },
     { nombre: 'Clips, Brackets y Felpas', instruccion: 'Expón la parte trasera / cavidades para revisar el detalle interno.',
-      defecto: 'Clip, bracket o felpa faltante o mal colocado' },
+      defecto: 'Clip, bracket o felpa faltante o mal colocado', imagenRef: 'ref/clips-brackets.jpg' },
     { nombre: 'Golpes y Rayones en Pantalla', instruccion: 'Coloca la pieza de frente, con la pantalla hacia la cámara.',
-      defecto: 'Golpe o rayón detectado en pantalla' },
+      defecto: 'Golpe o rayón detectado en pantalla', imagenRef: 'ref/pantalla.jpg' },
   ];
 
   // ── Estado ──────────────────────────────────────────────────────────────────
@@ -281,6 +310,16 @@
   selectOperador.value = localStorage.getItem('iv_operador') || selectOperador.options[0].value;
   function cambiarOperador() {
     localStorage.setItem('iv_operador', selectOperador.value);
+    actualizarContadorPiezas();
+  }
+
+  // ── Contador de piezas procesadas hoy por el operador seleccionado ──────────
+  function actualizarContadorPiezas() {
+    const hoy = new Date().toDateString();
+    const total = ivLeerHistorial().filter(r =>
+      r.operador === selectOperador.value && new Date(r.fecha).toDateString() === hoy
+    ).length;
+    document.getElementById('contador-piezas-num').textContent = total;
   }
 
   // ── Pantalla 0 → 1: no se pide folio/ID, arranca directo la cámara ──────────
@@ -300,6 +339,7 @@
     mostrarPantalla('captura');
     construirProgreso();
     actualizarInstruccion();
+    actualizarContadorPiezas();
     repetirCaptura(); // limpia cualquier panel OK/NOK que haya quedado de una inspección previa
     await iniciarCamara();
   }
@@ -401,6 +441,22 @@
     document.getElementById('cap-num').textContent = rutaActual + 1;
     document.getElementById('cap-nombre-ruta').textContent = ruta.nombre;
     document.getElementById('cap-instruccion').textContent = ruta.instruccion;
+    actualizarImagenReferencia(ruta);
+  }
+
+  // ── Imagen de referencia (cómo colocar la pieza) por ruta ────────────────────
+  // Los archivos reales (fotos que compartió Forvia) van en ref/<archivo>, con el
+  // nombre indicado en RUTAS[].imagenRef. Mientras no exista el archivo se muestra
+  // un placeholder — nunca se inventa una imagen.
+  function actualizarImagenReferencia(ruta) {
+    const img = document.getElementById('ref-img');
+    const fallback = document.getElementById('ref-fallback');
+    document.getElementById('ref-ruta-nombre').textContent = ruta.nombre;
+    img.style.display = 'none';
+    fallback.style.display = 'none';
+    img.onerror = () => { img.style.display = 'none'; fallback.style.display = 'flex'; };
+    img.onload = () => { img.style.display = 'block'; fallback.style.display = 'none'; };
+    img.src = ruta.imagenRef;
   }
 
   // ── Captura + análisis simulado ────────────────────────────────────────────
@@ -536,6 +592,7 @@
       defecto: fallo ? fallo.defecto : null,
       capturas,
     });
+    actualizarContadorPiezas();
 
     mostrarPantalla('final');
   }
